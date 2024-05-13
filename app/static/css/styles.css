@@ -1,0 +1,255 @@
+body {
+  background: linear-gradient(to bottom, #22052d, #ccb3d1);
+  margin:   0; /* Remove default margins */
+  height:   100vh; /* Full viewport height */
+}
+
+/* Style for the page wrapper to center content vertically */
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height:   100%; /* Take full height of the body */
+}
+
+/* Existing styles */
+.image-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height:   50%; /* Half of the viewport height */
+}
+
+/* Style for the image buttons */
+.button {
+  display: inline-block; /* Display as inline-block to allow for padding */
+  overflow: hidden; /* Hide any content that goes outside the border */
+  border:   2px solid transparent; /* Slim frame around the image */
+  border-radius:   5px; /* Rounded corners */
+  transition: border-color   0.1s ease, transform   0.1s ease; /* Smooth transition for hover effect */
+  padding:   5px; /* Padding to create space around the image */
+  margin:   0   10px; /* Horizontal spacing between buttons */
+  cursor: pointer; /* Default cursor when hovering over the button */
+}
+
+/* Style for the image buttons when Shift is held */
+.button.shift-key-pressed {
+  cursor: move; /* Cursor indicating that the object can be moved */
+}
+
+/* Style for the image buttons when Shift is held and the mouse is down */
+.button.shift-key-pressed:active {
+  cursor: move; /* Cursor indicating that the object is being moved */
+}
+
+/* Style for the images within the image buttons */
+.button img {
+  max-width:   45vw; /* Set maximum width of the image */
+  max-height: 30vw;
+  height: auto; /* Automatically adjust the height based on the width */
+  transform: scale(1); /* Initial scale */
+  transform-origin: center; /* Center the zoom effect */
+  display: inline-block; /* Allows for transformations */
+  transition: transform   0.1s ease; /* Smooth transition for transformations */
+}
+
+/* Hover effect for the image buttons */
+.button:hover {
+  border-color: #093B4D; /* Highlight the frame on hover */
+}
+
+/* Existing styles */
+/* ... other styles ... */
+
+/* Import the 'Hack' font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
+
+/* Existing styles */
+/* ... other styles ... */
+
+/* Style for the 'Select new seed image' button */
+.centered-button {
+  position: absolute; /* Position the button absolutely within the page */
+  bottom:   1vw; /* Distance from the bottom edge of the page */
+  right:   2.5vw; /* Distance from the right edge of the page */
+}
+
+/* Style for the 'Select new seed image' button */
+.centered-button .button {
+  background-color: #071A21; /* Background color */
+  border-radius:   5px; /* Rounded corners */
+  transition: background-color   0.3s ease; /* Smooth transition for hover effect */
+  padding:   10px   20px; /* Padding for better appearance */
+  color: white; /* Text color */
+  font-size:   16px; /* Font size */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  text-decoration: none; /* Remove underline from anchor tag */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
+
+/* Hover effect for the 'Select new seed image' button */
+.centered-button .button:hover {
+  background-color: #093B4D; /* Darker shade for hover effect */
+}
+/* Style for the 'Select new seed image' button */
+.end-session-button {
+  position: absolute; /* Position the button absolutely within the page */
+  bottom:   1vw; /* Distance from the bottom edge of the page */
+  left:   2.5vw; /* Distance from the right edge of the page */
+}
+
+/* Style for the 'Select new seed image' button */
+.end-session-button .button {
+  background-color: #071A21; /* Background color */
+  border-radius:   5px; /* Rounded corners */
+  transition: background-color   0.3s ease; /* Smooth transition for hover effect */
+  padding:   10px   20px; /* Padding for better appearance */
+  color: white; /* Text color */
+  font-size:   16px; /* Font size */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  text-decoration: none; /* Remove underline from anchor tag */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
+
+/* Hover effect for the 'Select new seed image' button */
+.end-session-button .button:hover {
+  background-color: #093B4D; /* Darker shade for hover effect */
+}
+/* Style for the page wrapper to center content vertically */
+.page-wrapper {
+  min-height:   100vh; /* Minimum height of the viewport */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.session-container {
+background-color: white; /* Set container background color #F4E4BA also looks nice*/ 
+width: 90vw; /* Set width to 90% of viewport */
+margin: 0 auto; /* Center horizontally */
+padding: 20px; /* Add padding around contents */
+border-radius: 5px; /* Add rounded corners */
+margin-bottom: 10px; /* Add spacing between containers */
+}
+/* Define CSS for thumbnail images */
+.thumbnail-img {
+height: 50px; /* Adjust the width as needed */
+width: auto; /* Maintain aspect ratio */
+max-width: 100%; /* Ensure images do not exceed the specified width */
+max-height: 100px; /* Ensure images do not exceed the specified height */
+}
+.new-session-button {
+background-color: transparent; /* No background color for text */
+border: none; /* No border around button */
+color: black; /* Text color */
+font-size: 18px; /* Font size */
+padding: 10px 20px; /* Adjust padding for spacing */
+cursor: pointer; /* Change cursor on hover */
+text-decoration: none; /* Remove underline from anchor tag */
+font-family: 'Hack', monospace; /* Use the 'Hack' font */
+transition: all 0.3s ease; /* Smooth transition for hover effect */
+border-radius: 5px; /* Add rounded corners */
+}
+.new-session-button:hover {
+background-color: #eee; /* Change background color on hover */
+}
+.open-session-button {
+background-color: transparent; /* No background color for text */
+border: none; /* No border around button */
+color: black; /* Text color */
+font-size: 18px; /* Font size */
+padding: 10px 20px; /* Adjust padding for spacing */
+cursor: pointer; /* Change cursor on hover */
+text-decoration: none; /* Remove underline from anchor tag */
+font-family: 'Hack', monospace; /* Use the 'Hack' font */
+transition: all 0.3s ease; /* Smooth transition for hover effect */
+border-radius: 5px; /* Add rounded corners */
+float:right;
+}
+.open-session-button:hover {
+background-color: #eee; /* Change background color on hover */
+}
+.drop-session-button {
+background-color: transparent; /* No background color for text */
+border: none; /* No border around button */
+color: black; /* Text color */
+font-size: 18px; /* Font size */
+padding: 10px 20px; /* Adjust padding for spacing */
+cursor: pointer; /* Change cursor on hover */
+text-decoration: none; /* Remove underline from anchor tag */
+font-family: 'Hack', monospace; /* Use the 'Hack' font */
+transition: all 0.3s ease; /* Smooth transition for hover effect */
+border-radius: 5px; /* Add rounded corners */
+float:right;
+}
+
+
+.drop-session-button:hover {
+background-color: #eee; /* Change background color on hover */
+}
+.download-button {
+background-color: transparent; /* No background color for text */
+border: none; /* No border around button */
+color: black; /* Text color */
+font-size: 18px; /* Font size */
+padding: 10px 20px; /* Adjust padding for spacing */
+cursor: pointer; /* Change cursor on hover */
+text-decoration: none; /* Remove underline from anchor tag */
+font-family: 'Hack', monospace; /* Use the 'Hack' font */
+transition: all 0.3s ease; /* Smooth transition for hover effect */
+border-radius: 5px; /* Add rounded corners */
+float:right;
+}
+
+
+.download-button:hover {
+background-color: #eee; /* Change background color on hover */
+}
+
+.fixed-top {
+top: 1vw; /* Position it at the top of the viewport */
+left: 5vw; /* Position it at the left edge of the viewport */
+z-index: 1; /* Ensure it's on top of other elements */
+}
+.sessions-header {
+font-family: 'Hack', monospace;
+color: white;
+text-align: left; /* Left-align the text */
+top: 1vw; /* Position it at the top of the viewport */
+}
+/* Style for the 'Select new seed image' button */
+/* Style for the image buttons */
+.continue-button-left {
+  position: absolute; /* Position the button absolutely within the page */
+  top:   7vw; /* Distance from the bottom edge of the page */
+  left:   5vw; /* Distance from the right edge of the page */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  font-size:   13px; /* Font size */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
+.continue-button-right {
+  position: absolute; /* Position the button absolutely within the page */
+  top:   7vw; /* Distance from the bottom edge of the page */
+  right:   5vw; /* Distance from the right edge of the page */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  font-size:   13px; /* Font size */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
+.upload-container {
+background-color: white; /* Set container background color */
+margin: 0 auto; /* Center horizontally */
+padding: 100px; /* Add padding around contents */
+border-radius: 15px; /* Add rounded corners */
+margin-bottom: 10px; /* Add spacing between containers */
+}
+.browse-button {
+  cursor: pointer; /* Change cursor to pointer on hover */
+  font-size:   20px; /* Font size */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
+.upload-button {
+  cursor: pointer; /* Change cursor to pointer on hover */
+  font-size:   20px; /* Font size */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}
