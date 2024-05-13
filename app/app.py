@@ -185,7 +185,7 @@ def create_app():
     app.config['EMBEDDINGS_PORT'] = '5001'
     # app.config['DATABASE_HOST'] = 'http://127.0.0.1'
     # app.config['DATABASE_PORT'] = '5002'
-    app.config['MEDIA_FOLDER'] = '/home/stefan/media'
+    app.config['MEDIA_FOLDER'] = '/home/swezel/media' # TODO to value set in .env
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5433/sweeper'
 
     # Initialize the SQLAlchemy instance with the Flask app
@@ -351,19 +351,14 @@ def end_session():
 @app.route('/overview/<string:username>')
 def overview(username: str):
     """Renders an overview page listing sessions for a given user."""
-    # get_sessions_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/query_sessions/{username}"
-    # response = requests.get(get_sessions_url)
-
-    # if response.status_code == 200:
-    #     sessions_dict = response.json()
-    # else:
-    #     error_message = response.text
-    #     return render_template('404.html')
 
     with app.app_context():
-        # db.create_all()
         sessions_list = get_sessions_for_user(username)
-        print(sessions_list)
+        for session in sessions_list:
+            print(session.id)
+            print(session.session_token)
+            print(session.creation_time)
+            print(session.last_access_time)
 
 
 
@@ -379,7 +374,9 @@ def overview(username: str):
     #         #     assert os.path.exists(path)
     #         session_images[session_id] = image_paths  # Store image paths for the session ID
 
-    return render_template('overview.html', sessions_list=sessions_list, session_images=[])
+    # TODO add timestamps to the overview page
+    return render_template('overview.html', sessions_list=[sess.id for sess in sessions_list], session_images=[])
+
 
 
 
