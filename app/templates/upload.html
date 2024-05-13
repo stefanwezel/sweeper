@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Files</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="page-wrapper">
+
+      <div class="upload-container">
+    <input type="file" id="files" class="browse-button" name="files" accept="image/*,image/x-adobe-dng" multiple>
+    <button type="button" class="upload-button" onclick="uploadFiles()">Upload Images</button>
+    </div>
+
+  </div>
+  <script>
+    async function uploadFiles() {
+      const input = document.getElementById('files');
+      for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+        const formData = new FormData();
+        formData.append('files', file);
+        await fetch('/upload_image/{{ session_id }}', { method: 'POST', body: formData });
+      }
+      window.location.href = '/embed_images/{{ session_id }}';
+    }
+  </script>
+</body>
+</html>
+<!-- TODO add container here -->
