@@ -28,7 +28,7 @@ db = SQLAlchemy()
 
 
 
-
+# DB related
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -65,7 +65,7 @@ class Embedding(db.Model):
     status = db.Column(Enum('reviewed_keep', 'reviewed_discard', 'unreviewed', name='status'), nullable=False, default='unreviewed')
 
     def __repr__(self):
-        return f"Embedding('{self.display_path}', '{self.download_path}', '{self.session_id}', '{self.status}')"
+        return f"Embedding('{self.display_path}', '{self.download_path}', '{self.session_token}', '{self.status}')"
 
 
 
@@ -140,8 +140,62 @@ def get_images_to_keep(session_id):
     return images_to_keep
 
 
+def get_image_by_path(session_id, image_path):
+    return Embedding.query.filter_by(session_token=session_id, display_path=image_path).first()
 
 
+def get_starting_image(session_id):
+    """ Get a random unreviewed image from the session. """
+    unreviewed_images = Embedding.query.filter_by(session_token=session_id, status='unreviewed').all()
+    # unreviewed_images = [embedding.display_path for embedding in embeddings]
+    if unreviewed_images:
+        return random.choice(unreviewed_images)
+    else:
+        return None
+
+
+def get_nearest_neighbor(session_id, query_image_id):
+    """ Get the nearest neighbor to the query image. """
+    query_embedding = Embedding.query.get(query_image_id)
+    nns = (db.session.query(Embedding)
+            .filter(Embedding.session_token == session_id)
+            .filter(Embedding.id != query_image_id)
+            .filter(Embedding.status == 'unreviewed')
+            .order_by(Embedding.embedding.l2_distance(query_embedding.embedding))
+            .limit(1)
+            .all())[0]
+    return nns
+
+
+def update_image_status(session_id: str, update_image_path: str, set_status_to:str = 'reviewed_discard') -> str:
+    # update_image_path = add_media_folder_to_path(update_image_path)
+    # Update status of the image in the database
+    image = Embedding.query.filter_by(session_token=session_id, display_path=update_image_path).first()
+    print(image.display_path)
+    if image:
+        image.status = set_status_to
+        db.session.commit()
+    else:
+        logging.error(f"Image {update_image_path} not found in database.")
+        return False
+
+    return True
+
+
+
+
+# TODO remove to utils
+def strip_media_folder_from_path(path):
+    return path.replace(app.config['MEDIA_FOLDER'] + '/', '')
+
+def add_media_folder_to_path(path):
+    return os.path.join(app.config['MEDIA_FOLDER'], path)
+
+
+
+
+
+# App related functions and routes
 def create_app():
     # Create the Flask app
     app = Flask(__name__)
@@ -152,8 +206,6 @@ def create_app():
     app.config['GATEWAY_PORT'] = '5000'
     app.config['EMBEDDINGS_HOST'] = 'http://127.0.0.1'
     app.config['EMBEDDINGS_PORT'] = '5001'
-    # app.config['DATABASE_HOST'] = 'http://127.0.0.1'
-    # app.config['DATABASE_PORT'] = '5002'
     app.config['MEDIA_FOLDER'] = '/home/swezel/media' # TODO to value set in .env
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5433/sweeper'
 
@@ -176,21 +228,22 @@ def media(filename):
     return send_from_directory(media_folder, filename)
 
 
-@app.route('/sweep/<string:session_id>/<path:img_path_left>/<path:img_path_right>')
-def sweep_session(session_id, img_path_left, img_path_right):
-    if img_path_left == 'initial':
-        starting_image_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/starting_image/{session_id}"
-        response = requests.get(starting_image_url)
-        if response.status_code == 200:
-            starting_image_path = os.path.join(session_id, response.json())
-            nearest_neighbor_filename = get_nearest_neighbor(session_id, starting_image_path)
-            nearest_neighbor_path = os.path.join(session_id, nearest_neighbor_filename)
 
+@app.route('/sweep/<string:session_id>/left/<path:img_path_left>/right/<path:img_path_right>')
+def sweep_decision(session_id, img_path_left, img_path_right): # TODO replace API calls with database queries
+    print("-------")
+    print(f"left: {img_path_left}")
+    print(f"right: {img_path_right}")
+    print("-------")
+    if img_path_left == 'initial':
+        starting_image = get_starting_image(session_id)
+        if starting_image:
+            nearest_neighbor = get_nearest_neighbor(session_id, starting_image.id)
             return render_template(
                     'session.html',
                     session_id=session_id,
-                    img_path_left=starting_image_path,
-                    img_path_right=nearest_neighbor_path
+                    img_path_left=starting_image.display_path,
+                    img_path_right=nearest_neighbor.display_path
                 )
         else:
             return render_template(
@@ -205,13 +258,13 @@ def sweep_session(session_id, img_path_left, img_path_right):
             'session.html',
             session_id=session_id,
             img_path_left='endofline.jpg',
-            img_path_right=os.path.join(session_id, img_path_right)
+            img_path_right=session_id
         )
     elif img_path_right == 'endofline':
         return render_template(
             'session.html',
             session_id=session_id,
-            img_path_left=os.path.join(session_id, img_path_left),
+            img_path_left=session_id,
             img_path_right='endofline.jpg'
         )
 
@@ -220,65 +273,56 @@ def sweep_session(session_id, img_path_left, img_path_right):
         return render_template(
                 'session.html',
                 session_id=session_id,
-                img_path_left=os.path.join(session_id, img_path_left),
-                img_path_right=os.path.join(session_id, img_path_right)
+                img_path_left=img_path_left,
+                img_path_right=img_path_right
             )
 
 
 
-def get_nearest_neighbor(session_id: str, query_image_path: str) -> str:
-    query_img_filename = query_image_path.split("/")[-1]
-    nearest_neighbor_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/get_nearest_neighbor/{session_id}/{query_img_filename}"
-    response = requests.get(nearest_neighbor_url)
-    if response.status_code == 200:
-        nearest_neighbor_path = response.json()
-    else:
-        nearest_neighbor_path = "endofline"
-    return nearest_neighbor_path
 
-
-def update_image_status(session_id: str, update_image_path: str, set_status_to:str = 'reviewed_discard') -> str:
-    query_img_filename = update_image_path.split("/")[-1]
-    update_image_status_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/update_image_status"
+# def update_image_status(session_id: str, update_image_path: str, set_status_to:str = 'reviewed_discard') -> str:
+#     query_img_filename = update_image_path.split("/")[-1]
+#     update_image_status_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/update_image_status"
     
-    update_data = {
-        'session_id': session_id,
-        'update_image_path': query_img_filename,
-        'status': set_status_to
-    }
-    response = requests.post(update_image_status_url, json=update_data)
+#     update_data = {
+#         'session_id': session_id,
+#         'update_image_path': query_img_filename,
+#         'status': set_status_to
+#     }
+#     response = requests.post(update_image_status_url, json=update_data)
 
-    return response
+#     return response
 
 
 
 # TODO maybe merge image clicked and continue-clicked
-@app.route('/image_clicked/<string:position>/<string:session_id>/<path:other_img_path>', methods=['POST'])
-def image_clicked(position, session_id, other_img_path):
-    img_path = request.form.get('img_path')
-    if img_path.split("/")[-1] == 'endofline.jpg':
+@app.route('/image_clicked/<string:position>/<string:session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
+def image_clicked(position, session_id, clicked_img_path, other_img_path):
+    if clicked_img_path.split("/")[-1] == 'endofline.jpg':
         _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_keep')
         return redirect(url_for('overview', username='testuser'))
     _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_discard')
     try:
-        nearest_neighbor_path = get_nearest_neighbor(session_id, img_path)
+        clicked_img = get_image_by_path(session_id, clicked_img_path)
+        nearest_neighbor_path = get_nearest_neighbor(session_id, clicked_img.id).display_path
+
     except UnboundLocalError:
-        nearest_neighbor_path = img_path
+        nearest_neighbor_path = clicked_img_path
     if position == 'left':
         return redirect(
             url_for(
-                    'sweep_session',
+                    'sweep_decision',
                     session_id=session_id,
-                    img_path_left=img_path.split("/")[-1],
+                    img_path_left=clicked_img_path,
                     img_path_right=nearest_neighbor_path
                 ))
     else:
         return redirect(
             url_for(
-                    'sweep_session',
+                    'sweep_decision',
                     session_id=session_id,
                     img_path_left=nearest_neighbor_path,
-                    img_path_right=img_path.split("/")[-1]
+                    img_path_right=clicked_img_path
                 ))
 
 
@@ -290,7 +334,7 @@ def continue_clicked(position, session_id, other_img_path):
     if position == 'left':
         return redirect(
             url_for(
-                    'sweep_session',
+                    'sweep_decision',
                     session_id=session_id,
                     img_path_left=img_path.split("/")[-1],
                     img_path_right=nearest_neighbor_path
@@ -298,7 +342,7 @@ def continue_clicked(position, session_id, other_img_path):
     else:
         return redirect(
             url_for(
-                    'sweep_session',
+                    'sweep_decision',
                     session_id=session_id,
                     img_path_left=nearest_neighbor_path,
                     img_path_right=img_path.split("/")[-1]
@@ -308,7 +352,7 @@ def continue_clicked(position, session_id, other_img_path):
 @app.route('/select_seed_image', methods=['GET'])
 def select_seed_image():
     logging.info("Button clicked - selecting new seed image...")
-    return redirect(url_for('sweep_session'))
+    return redirect(url_for('sweep_decision'))
 
 @app.route('/end_session', methods=['GET'])
 def end_session():
@@ -399,7 +443,7 @@ def embed_images(session_id):
         embedding = np.random.rand(384)
 
         # Write the embedding to the database
-        embedding_row = add_embedding_for_session(new_session.id, display_path, download_path, embedding)
+        embedding_row = add_embedding_for_session(new_session.id, strip_media_folder_from_path(display_path), download_path, embedding)
         if embedding_row:
             logging.info(f"Image {display_path} added successfully. ..")
         else:
@@ -443,22 +487,10 @@ def download_subset(session_id):
     # response = requests.get(images_to_keep)
     subset = get_images_to_keep(session_id)
     if not subset:
-        return "No images to download", 404
-    # Create a zip file containing the images to keep
-    print()
-    print(subset)
-    print()
-    # REturn to overview page
-    # return redirect(url_for('overview', username='testuser'))
+        # TODO send message to client that no images were selected
+        return redirect(url_for('overview', username='testuser'))
+    
 
-
-
-
-    # files = files = os.listdir(upload_dir)
-    # files = [file for file in files if file in response.json()]
-
-    # if not files:
-    #     return "No files found for this session ID", 404
     # Create a zip file containing all uploaded files
     zip_filename = f"{session_id}.zip"
     zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
