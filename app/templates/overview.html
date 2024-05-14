@@ -28,7 +28,7 @@
       <a href="{{ url_for('download_subset', session_id=session) }}">
         <button class="download-button">⬇️ Download files</button>
       </a>
-      <a href="{{ url_for('sweep_session', session_id=session, img_path_left='initial', img_path_right='initial') }}">
+      <a href="{{ url_for('sweep_decision', session_id=session, img_path_left='initial', img_path_right='initial') }}">
         <button class="open-session-button">📁 Open session {{ session }}</button>
       </a>
     </div>
