@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, send_file
 import os
 import random
 import uuid
@@ -12,51 +12,8 @@ from flask import send_file
 import logging
 from flask_sqlalchemy import SQLAlchemy
 
-# import database
-
-# app = Flask(__name__)
-# app.secret_key = "your_secret_key"  # Set a secret key for session security
-
-# # Set up flask global variables
-# app.config['GATEWAY_HOST'] = 'http://127.0.0.1'
-# app.config['GATEWAY_PORT'] = '5000'
-# app.config['EMBEDDINGS_HOST'] = 'http://127.0.0.1'
-# app.config['EMBEDDINGS_PORT'] = '5001'
-# app.config['DATABASE_HOST'] = 'http://127.0.0.1'
-# app.config['DATABASE_PORT'] = '5002'
-# app.config['MEDIA_FOLDER'] = '/home/stefan/media'
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# # DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5433/sweeper'
-# db = SQLAlchemy(app)
-from flask import Flask, send_file
-from flask_sqlalchemy import SQLAlchemy
-import logging
-
-# Create the SQLAlchemy instance
-db = SQLAlchemy()
-
-
-
-
-
-
-
-
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Index, Enum
@@ -65,7 +22,9 @@ import numpy as np
 import datetime
 import uuid
 
-# from app import app, db
+# Create the SQLAlchemy instance
+db = SQLAlchemy()
+
 
 
 
@@ -83,6 +42,8 @@ class User(db.Model):
 
 
 class Session(db.Model):
+    # TODO maybe make session_token primary key?
+    # TODO or maybe rename id to something else to avoid confusion?
     __tablename__ = 'sessions'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -99,7 +60,7 @@ class Embedding(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     display_path = db.Column(db.String(255), nullable=False)
     download_path = db.Column(db.String(255), nullable=False)
-    session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=False)
+    session_token = db.Column(db.String(36), db.ForeignKey('sessions.session_token'), nullable=False)
     embedding = db.Column(Vector(384), nullable=False)
     status = db.Column(Enum('reviewed_keep', 'reviewed_discard', 'unreviewed', name='status'), nullable=False, default='unreviewed')
 
@@ -117,10 +78,9 @@ def add_user(username, email, subscribed=False):
 
     return new_user
 
-def add_session_for_user(username):
+def add_session_for_user(username, session_token):
     user = User.query.filter_by(username=username).first()
     if user:
-        session_token = str(uuid.uuid4().hex)
         new_session = Session(user_id=user.id, session_token=session_token)
         db.session.add(new_session)
         db.session.commit()
@@ -139,7 +99,7 @@ def get_sessions_for_user(username):
 def add_embedding_for_session(session_id, display_path, download_path, embedding):
     session = Session.query.get(session_id)
     if session:
-        new_embedding = Embedding(session_id=session.id, display_path=display_path, download_path=download_path, embedding=embedding)
+        new_embedding = Embedding(session_token=session.session_token, display_path=display_path, download_path=download_path, embedding=embedding)
         db.session.add(new_embedding)
         db.session.commit()
         return new_embedding
@@ -148,13 +108,13 @@ def add_embedding_for_session(session_id, display_path, download_path, embedding
 
 
 
-def remove_session_for_user(username, session_id):
+def remove_session_for_user(username, session_token):
     user = User.query.filter_by(username=username).first()
     if user:
-        session = Session.query.get(session_id)
+        session = Session.query.filter_by(user_id=user.id, session_token=session_token).first()
         if session:
             # Remove all embeddings for this session
-            embeddings = Embedding.query.filter_by(session_id=session.id).all()
+            embeddings = Embedding.query.filter_by(session_token=session.session_token).all()
             for embedding in embeddings:
                 db.session.delete(embedding)
                 db.session.commit()
@@ -169,6 +129,15 @@ def remove_session_for_user(username, session_id):
         return False
 
 
+
+def get_images_to_keep(session_id):
+    # Get 
+    embeddings = Embedding.query.filter_by(session_token=session_id).all()
+    images_to_keep = []
+    for embedding in embeddings:
+        if embedding.status == 'reviewed_keep':
+            images_to_keep.append(embedding.display_path)
+    return images_to_keep
 
 
 
@@ -354,12 +323,6 @@ def overview(username: str):
 
     with app.app_context():
         sessions_list = get_sessions_for_user(username)
-        for session in sessions_list:
-            print(session.id)
-            print(session.session_token)
-            print(session.creation_time)
-            print(session.last_access_time)
-
 
 
     session_images = {}  # Dictionary to store session IDs and their corresponding image paths
@@ -375,7 +338,7 @@ def overview(username: str):
     #         session_images[session_id] = image_paths  # Store image paths for the session ID
 
     # TODO add timestamps to the overview page
-    return render_template('overview.html', sessions_list=[sess.id for sess in sessions_list], session_images=[])
+    return render_template('overview.html', sessions_list=[sess.session_token for sess in sessions_list], session_images=[])
 
 
 
@@ -415,48 +378,40 @@ def upload_done(session_id):
 @app.route('/embed_images/<string:session_id>', methods=['GET', 'POST'])
 def embed_images(session_id):
 
-    image_dir = f"{app.config['MEDIA_FOLDER']}/{session_id}"  # Change this to your desired upload directory
-    
-    session_data = {
-        'username': 'testuser',
-        '_id': session_id,
-        'img_dir': image_dir,
-    }
-    new_session_request_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/add_session"
-    response = requests.post(new_session_request_url, json=session_data)
+    image_dir = f"{app.config['MEDIA_FOLDER']}/{session_id}"
+    new_session = add_session_for_user('testuser', session_id)
+
+    logging.info(f"New session added with ID {new_session.id}")
 
     for img_path in os.listdir(image_dir):
+        print(img_path)
         # We add the jpg twin for ease of processing if the image is in raw (dng) format
-        if img_path.endswith("dng") or img_path.endswith("DNG"):
+        if img_path.endswith(("dng", "DNG")):
             logging.info("dng detected... converting")
             display_path, download_path = convert_dng_to_jpg(os.path.join(image_dir, img_path))
         else:
             display_path, download_path = os.path.join(image_dir, img_path), os.path.join(image_dir, img_path)
 
-        embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
-        response = requests.get(embedding_request_url)
 
-        # Wrap embedding with additional metadata
-        embedding_data = {
-            'username': 'testuser',
-            '_id': session_id,
-            'display_path': display_path,
-            'download_path': download_path,
-            'embedding': response.json()
-        }
+        # TODO replace with actual embedding from embeddings API
+        # embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
+        # response = requests.get(embedding_request_url)
+        embedding = np.random.rand(384)
 
-        # Embeddings to to db
-        insert_embedding_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/insert_embedding"
-        response = requests.post(insert_embedding_url, json=embedding_data)
-        if response.status_code == 200:
-            logging.info(f"Image {display_path} added successfully...")
+        # Write the embedding to the database
+        embedding_row = add_embedding_for_session(new_session.id, display_path, download_path, embedding)
+        if embedding_row:
+            logging.info(f"Image {display_path} added successfully. ..")
         else:
             logging.info(f"Something went wrong when attempting to add image {display_path}")
-    
+
     # Once everything is inserted, go to overview page where added session should be listed...
     return redirect(url_for('overview', username='testuser'))
 
 
+
+
+# TODO move to utils
 def convert_dng_to_jpg(dng_path):
     # Open the DNG file
     with rawpy.imread(dng_path) as raw:
@@ -484,19 +439,31 @@ def download_subset(session_id):
     upload_dir = os.path.join(app.config['MEDIA_FOLDER'], session_id)
     if not os.path.exists(upload_dir):
         return "Session ID not found", 404
-    images_to_keep = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/images_to_keep/{session_id}"
-    response = requests.get(images_to_keep)
-    
-    files = files = os.listdir(upload_dir)
-    files = [file for file in files if file in response.json()]
+    # images_to_keep = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/images_to_keep/{session_id}"
+    # response = requests.get(images_to_keep)
+    subset = get_images_to_keep(session_id)
+    if not subset:
+        return "No images to download", 404
+    # Create a zip file containing the images to keep
+    print()
+    print(subset)
+    print()
+    # REturn to overview page
+    # return redirect(url_for('overview', username='testuser'))
 
-    if not files:
-        return "No files found for this session ID", 404
+
+
+
+    # files = files = os.listdir(upload_dir)
+    # files = [file for file in files if file in response.json()]
+
+    # if not files:
+    #     return "No files found for this session ID", 404
     # Create a zip file containing all uploaded files
     zip_filename = f"{session_id}.zip"
     zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
     with ZipFile(zip_filepath, 'w') as zip:
-        for file in files:
+        for file in subset:
             file_path = os.path.join(upload_dir, file)
             zip.write(file_path, os.path.basename(file_path))
 
@@ -522,10 +489,18 @@ def init_new_session():
 @app.route('/drop_session/<string:session_id>')
 def drop_session(session_id):
 
-    logging.info(f"Dropping session {session_id}")
+    # Remove the session from the database
+    success = remove_session_for_user('testuser', session_id)
+    if success:
+        logging.info(f"Session {session_id} successfully removed from database.")
+    else:
+        logging.info(f"Something went wrong when attempting to remove session {session_id}.")
 
-    drop_session_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/drop_session"
-    response = requests.post(drop_session_url, json={"username":"testuser", "_id": session_id})
+
+    # drop_session_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/drop_session"
+    # response = requests.post(drop_session_url, json={"username":"testuser", "_id": session_id})
+
+
 
     config = SessionConfig(
         root_dir = app.config['MEDIA_FOLDER'],
