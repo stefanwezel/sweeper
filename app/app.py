@@ -136,7 +136,7 @@ def get_images_to_keep(session_id):
     images_to_keep = []
     for embedding in embeddings:
         if embedding.status == 'reviewed_keep':
-            images_to_keep.append(embedding.display_path)
+            images_to_keep.append(embedding.download_path)
     return images_to_keep
 
 
@@ -274,23 +274,6 @@ def sweep_decision(session_id, img_path_left, img_path_right): # TODO replace AP
 
 
 
-
-# def update_image_status(session_id: str, update_image_path: str, set_status_to:str = 'reviewed_discard') -> str:
-#     query_img_filename = update_image_path.split("/")[-1]
-#     update_image_status_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/update_image_status"
-    
-#     update_data = {
-#         'session_id': session_id,
-#         'update_image_path': query_img_filename,
-#         'status': set_status_to
-#     }
-#     response = requests.post(update_image_status_url, json=update_data)
-
-#     return response
-
-
-
-# TODO maybe merge image clicked and continue-clicked
 @app.route('/image_clicked/<string:position>/<string:session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
 def image_clicked(position, session_id, clicked_img_path, other_img_path):
     if clicked_img_path.split("/")[-1] == 'endofline.jpg':
@@ -486,8 +469,9 @@ def download_subset(session_id):
     zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
     with ZipFile(zip_filepath, 'w') as zip:
         for file in subset:
-            file_path = os.path.join(app.config['MEDIA_FOLDER'], file)
-            zip.write(file_path, os.path.basename(file_path))
+            # file_path = os.path.join(app.config['MEDIA_FOLDER'], file)
+            
+            zip.write(file, os.path.basename(file))
 
     # Send the zip file to the client
     return send_from_directory(app.config['MEDIA_FOLDER'], zip_filename, as_attachment=True)
