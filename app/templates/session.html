@@ -12,7 +12,7 @@
     <div class="page-wrapper">
         <div class="image-buttons-container">
             <!-- "Continue from here" button-->
-            <form action="{{ url_for('continue_clicked', position='left', session_id=session_id, other_img_path=img_path_right) }}" method="post">
+            <form action="{{ url_for('continue_clicked', position='left', session_id=session_id,clicked_img_path=img_path_left, other_img_path=img_path_right) }}" method="post">
                 <input type="hidden" name="img_path" value="{{ url_for('media', filename=img_path_left) }}">
                 <button type="submit" class="continue-button-left"><img  alt="Continue from here -> keep other"></button>
             </form>
@@ -22,7 +22,7 @@
                 <button type="submit" class="button"><img src="{{ url_for('media', filename=img_path_left) }}" alt="Left Button Image"></button>
             </form>
             <!-- "Continue from here" button-->
-            <form action="{{ url_for('continue_clicked', position='right', session_id=session_id, other_img_path=img_path_left) }}" method="post">
+            <form action="{{ url_for('continue_clicked', position='right', session_id=session_id,clicked_img_path=img_path_right, other_img_path=img_path_left) }}" method="post">
                 <input type="hidden" name="img_path" value="{{ url_for('media', filename=img_path_right) }}">
                 <button type="submit" class="continue-button-right"><img  alt="Continue from here -> keep other"></button>
             </form>

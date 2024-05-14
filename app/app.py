@@ -171,7 +171,6 @@ def update_image_status(session_id: str, update_image_path: str, set_status_to:s
     # update_image_path = add_media_folder_to_path(update_image_path)
     # Update status of the image in the database
     image = Embedding.query.filter_by(session_token=session_id, display_path=update_image_path).first()
-    print(image.display_path)
     if image:
         image.status = set_status_to
         db.session.commit()
@@ -231,10 +230,6 @@ def media(filename):
 
 @app.route('/sweep/<string:session_id>/left/<path:img_path_left>/right/<path:img_path_right>')
 def sweep_decision(session_id, img_path_left, img_path_right): # TODO replace API calls with database queries
-    print("-------")
-    print(f"left: {img_path_left}")
-    print(f"right: {img_path_right}")
-    print("-------")
     if img_path_left == 'initial':
         starting_image = get_starting_image(session_id)
         if starting_image:
@@ -326,17 +321,21 @@ def image_clicked(position, session_id, clicked_img_path, other_img_path):
                 ))
 
 
-@app.route('/continue_clicked/<string:position>/<string:session_id>/<path:other_img_path>', methods=['POST'])
-def continue_clicked(position, session_id, other_img_path):
+# @app.route('/continue_clicked/<string:position>/<string:session_id>/<path:other_img_path>', methods=['POST'])
+@app.route('/continue_clicked/<string:position>/<string:session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
+def continue_clicked(position, session_id, clicked_img_path, other_img_path):
     img_path = request.form.get('img_path')
     _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_keep')
-    nearest_neighbor_path = get_nearest_neighbor(session_id, img_path)
+    # nearest_neighbor_path = get_nearest_neighbor(session_id, img_path)
+    clicked_img = get_image_by_path(session_id, clicked_img_path)
+    nearest_neighbor_path = get_nearest_neighbor(session_id, clicked_img.id).display_path
+
     if position == 'left':
         return redirect(
             url_for(
                     'sweep_decision',
                     session_id=session_id,
-                    img_path_left=img_path.split("/")[-1],
+                    img_path_left=clicked_img_path,
                     img_path_right=nearest_neighbor_path
                 ))
     else:
@@ -345,7 +344,7 @@ def continue_clicked(position, session_id, other_img_path):
                     'sweep_decision',
                     session_id=session_id,
                     img_path_left=nearest_neighbor_path,
-                    img_path_right=img_path.split("/")[-1]
+                    img_path_right=clicked_img_path
                 ))
 
 
@@ -368,21 +367,16 @@ def overview(username: str):
     with app.app_context():
         sessions_list = get_sessions_for_user(username)
 
-
     session_images = {}  # Dictionary to store session IDs and their corresponding image paths
 
-    # for session_id in sessions_list:
-    #     get_example_image_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/get_example_images/{session_id}"
-    #     image_path_response = requests.get(get_example_image_url)
-    #     if image_path_response.status_code == 200:
-    #         image_paths = image_path_response.json()
-    #         image_paths = [os.path.join(session_id, p) for p in image_paths]
-    #         # for path in image_paths:
-    #         #     assert os.path.exists(path)
-    #         session_images[session_id] = image_paths  # Store image paths for the session ID
+    for session_id in sessions_list:
+        # Get the image paths for the session from the database
+        embeddings = Embedding.query.filter_by(session_token=session_id.session_token).limit(5).all()
+        image_paths = [embedding.display_path for embedding in embeddings]
+        session_images[session_id.session_token] = image_paths
 
     # TODO add timestamps to the overview page
-    return render_template('overview.html', sessions_list=[sess.session_token for sess in sessions_list], session_images=[])
+    return render_template('overview.html', sessions_list=[sess.session_token for sess in sessions_list], session_images=session_images)
 
 
 
@@ -428,7 +422,6 @@ def embed_images(session_id):
     logging.info(f"New session added with ID {new_session.id}")
 
     for img_path in os.listdir(image_dir):
-        print(img_path)
         # We add the jpg twin for ease of processing if the image is in raw (dng) format
         if img_path.endswith(("dng", "DNG")):
             logging.info("dng detected... converting")
@@ -483,20 +476,17 @@ def download_subset(session_id):
     upload_dir = os.path.join(app.config['MEDIA_FOLDER'], session_id)
     if not os.path.exists(upload_dir):
         return "Session ID not found", 404
-    # images_to_keep = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/images_to_keep/{session_id}"
-    # response = requests.get(images_to_keep)
     subset = get_images_to_keep(session_id)
     if not subset:
         # TODO send message to client that no images were selected
         return redirect(url_for('overview', username='testuser'))
     
-
     # Create a zip file containing all uploaded files
     zip_filename = f"{session_id}.zip"
     zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
     with ZipFile(zip_filepath, 'w') as zip:
         for file in subset:
-            file_path = os.path.join(upload_dir, file)
+            file_path = os.path.join(app.config['MEDIA_FOLDER'], file)
             zip.write(file_path, os.path.basename(file_path))
 
     # Send the zip file to the client
