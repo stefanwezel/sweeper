@@ -2,6 +2,7 @@ from typing import List, Optional
 import os
 import logging
 import datetime
+from dotenv import find_dotenv, load_dotenv
 
 import random
 import uuid
@@ -24,6 +25,11 @@ import utils
 # TODO sort out mixed use of id and session_token in database tables
 # TODO get rid of unnecessary arguments for routing functions if possible
 # TODO add indices to database tables
+
+
+ENV_FILE = find_dotenv('.env.dev')
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 # Create the SQLAlchemy instance
 db = SQLAlchemy() # maybe make this upper case (?)
@@ -185,14 +191,16 @@ def create_app():
     app.config['GATEWAY_PORT'] = '5000'
     app.config['EMBEDDINGS_HOST'] = 'http://127.0.0.1'
     app.config['EMBEDDINGS_PORT'] = '5001'
-    app.config['MEDIA_FOLDER'] = '/home/swezel/media' # TODO to value set in .env
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5433/sweeper'
+    app.config['MEDIA_FOLDER'] = os.getenv("MEDIA_FOLDER")
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI")
 
     # Initialize the SQLAlchemy instance with the Flask app
     db.init_app(app)
 
     with app.app_context():
         db.create_all()
+        # add_user('testuser', 'testuser@testmail.com')
+
 
     return app
 app = create_app()
@@ -331,7 +339,7 @@ def overview(username: str):
 
     for session_id in sessions_list:
         # Get the image paths for the session from the database
-        embeddings = Embedding.query.filter_by(session_token=session_id.session_token).limit(5).all()
+        embeddings = Embedding.query.filter_by(session_token=session_id.session_token).limit(3).all()
         image_paths = [embedding.display_path for embedding in embeddings]
         session_images[session_id.session_token] = image_paths
 
