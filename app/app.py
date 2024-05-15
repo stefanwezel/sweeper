@@ -1,42 +1,39 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, send_file
+from typing import List, Optional
 import os
+import logging
+import datetime
+
 import random
 import uuid
-import requests
-import json
+import numpy as np
+
 from zipfile import ZipFile
 import rawpy
 from PIL import Image
-import io
-from flask import send_file
-import logging
-from flask_sqlalchemy import SQLAlchemy
 
-
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, send_file
+import requests
+from werkzeug.utils import secure_filename
 
 from flask_sqlalchemy import SQLAlchemy
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Index, Enum
-import numpy as np
 
-import datetime
-import uuid
+
 
 # Create the SQLAlchemy instance
 db = SQLAlchemy()
 
 
-
-
 # DB related
 class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(255), nullable=False, unique=True)
-    email = db.Column(db.String(255), nullable=False)
-    subscribed = db.Column(db.Boolean, default=False)
+    __tablename__: str = 'users'
+    id: int = db.Column(db.Integer, primary_key=True)
+    username: str = db.Column(db.String(255), nullable=False, unique=True)
+    email: str = db.Column(db.String(255), nullable=False)
+    subscribed: bool = db.Column(db.Boolean, default=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"User('{self.username}', '{self.email}')"
 
 
@@ -45,40 +42,40 @@ class Session(db.Model):
     # TODO maybe make session_token primary key?
     # TODO or maybe rename id to something else to avoid confusion?
     __tablename__ = 'sessions'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    session_token = db.Column(db.String(36), unique=True, nullable=False)
-    creation_time = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
-    last_access_time = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
+    id: int = db.Column(db.Integer, primary_key=True)
+    user_id: int = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    session_token: str = db.Column(db.String(36), unique=True, nullable=False)
+    creation_time: datetime.datetime = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
+    last_access_time: datetime.datetime = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Session('{self.session_token}', '{self.id}')"
 
 
 class Embedding(db.Model):
     __tablename__ = 'embeddings'
-    id = db.Column(db.Integer, primary_key=True)
-    display_path = db.Column(db.String(255), nullable=False)
-    download_path = db.Column(db.String(255), nullable=False)
-    session_token = db.Column(db.String(36), db.ForeignKey('sessions.session_token'), nullable=False)
-    embedding = db.Column(Vector(384), nullable=False)
-    status = db.Column(Enum('reviewed_keep', 'reviewed_discard', 'unreviewed', name='status'), nullable=False, default='unreviewed')
+    id: int = db.Column(db.Integer, primary_key=True)
+    display_path: str = db.Column(db.String(255), nullable=False)
+    download_path: str = db.Column(db.String(255), nullable=False)
+    session_token: str = db.Column(db.String(36), db.ForeignKey('sessions.session_token'), nullable=False)
+    embedding: np.ndarray = db.Column(Vector(384), nullable=False)
+    status: str = db.Column(Enum('reviewed_keep', 'reviewed_discard', 'unreviewed', name='status'), nullable=False, default='unreviewed')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Embedding('{self.display_path}', '{self.download_path}', '{self.session_token}', '{self.status}')"
 
 
 
 
 
-def add_user(username, email, subscribed=False):
+def add_user(username: str, email: str, subscribed: bool = False) -> User:
     new_user = User(username=username, email=email, subscribed=subscribed)
     db.session.add(new_user)
     db.session.commit()
 
     return new_user
 
-def add_session_for_user(username, session_token):
+def add_session_for_user(username: str, session_token: str) -> Session:
     user = User.query.filter_by(username=username).first()
     if user:
         new_session = Session(user_id=user.id, session_token=session_token)
@@ -88,7 +85,7 @@ def add_session_for_user(username, session_token):
     else:
         return None
 
-def get_sessions_for_user(username):
+def get_sessions_for_user(username: str) -> List[Session]:
     user = User.query.filter_by(username=username).first()
     if user:
         sessions = Session.query.filter_by(user_id=user.id).all()
@@ -96,7 +93,7 @@ def get_sessions_for_user(username):
     else:
         return None
 
-def add_embedding_for_session(session_id, display_path, download_path, embedding):
+def add_embedding_for_session(session_id: int, display_path: str, download_path: str, embedding: np.ndarray) -> Embedding:
     session = Session.query.get(session_id)
     if session:
         new_embedding = Embedding(session_token=session.session_token, display_path=display_path, download_path=download_path, embedding=embedding)
@@ -106,9 +103,7 @@ def add_embedding_for_session(session_id, display_path, download_path, embedding
     else:
         return None
 
-
-
-def remove_session_for_user(username, session_token):
+def remove_session_for_user(username: str, session_token: str) -> bool:
     user = User.query.filter_by(username=username).first()
     if user:
         session = Session.query.filter_by(user_id=user.id, session_token=session_token).first()
@@ -128,10 +123,7 @@ def remove_session_for_user(username, session_token):
     else:
         return False
 
-
-
-def get_images_to_keep(session_id):
-    # Get 
+def get_images_to_keep(session_id: str) -> List[str]:
     embeddings = Embedding.query.filter_by(session_token=session_id).all()
     images_to_keep = []
     for embedding in embeddings:
@@ -139,22 +131,18 @@ def get_images_to_keep(session_id):
             images_to_keep.append(embedding.download_path)
     return images_to_keep
 
-
-def get_image_by_path(session_id, image_path):
+def get_image_by_path(session_id: str, image_path: str) -> Embedding:
     return Embedding.query.filter_by(session_token=session_id, display_path=image_path).first()
 
-
-def get_starting_image(session_id):
-    """ Get a random unreviewed image from the session. """
+def get_starting_image(session_id: str) -> Optional[Embedding]:
     unreviewed_images = Embedding.query.filter_by(session_token=session_id, status='unreviewed').all()
-    # unreviewed_images = [embedding.display_path for embedding in embeddings]
     if unreviewed_images:
         return random.choice(unreviewed_images)
     else:
         return None
 
 
-def get_nearest_neighbor(session_id, query_image_id):
+def get_nearest_neighbor(session_id: str, query_image_id: int) -> Embedding:
     """ Get the nearest neighbor to the query image. """
     query_embedding = Embedding.query.get(query_image_id)
     nns = (db.session.query(Embedding)
@@ -168,8 +156,7 @@ def get_nearest_neighbor(session_id, query_image_id):
 
 
 def update_image_status(session_id: str, update_image_path: str, set_status_to:str = 'reviewed_discard') -> str:
-    # update_image_path = add_media_folder_to_path(update_image_path)
-    # Update status of the image in the database
+    """ Update the status of an image in the database. """
     image = Embedding.query.filter_by(session_token=session_id, display_path=update_image_path).first()
     if image:
         image.status = set_status_to
@@ -187,8 +174,6 @@ def update_image_status(session_id: str, update_image_path: str, set_status_to:s
 def strip_media_folder_from_path(path):
     return path.replace(app.config['MEDIA_FOLDER'] + '/', '')
 
-def add_media_folder_to_path(path):
-    return os.path.join(app.config['MEDIA_FOLDER'], path)
 
 
 
@@ -304,7 +289,6 @@ def image_clicked(position, session_id, clicked_img_path, other_img_path):
                 ))
 
 
-# @app.route('/continue_clicked/<string:position>/<string:session_id>/<path:other_img_path>', methods=['POST'])
 @app.route('/continue_clicked/<string:position>/<string:session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
 def continue_clicked(position, session_id, clicked_img_path, other_img_path):
     img_path = request.form.get('img_path')
@@ -361,13 +345,6 @@ def overview(username: str):
     # TODO add timestamps to the overview page
     return render_template('overview.html', sessions_list=[sess.session_token for sess in sessions_list], session_images=session_images)
 
-
-
-
-
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory
-from werkzeug.utils import secure_filename
-import shutil
 
 
 @app.route('/upload_form/<string:session_id>')
@@ -465,12 +442,11 @@ def download_subset(session_id):
         return redirect(url_for('overview', username='testuser'))
     
     # Create a zip file containing all uploaded files
+    # TODO make this part of the FileClient class
     zip_filename = f"{session_id}.zip"
     zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
     with ZipFile(zip_filepath, 'w') as zip:
-        for file in subset:
-            # file_path = os.path.join(app.config['MEDIA_FOLDER'], file)
-            
+        for file in subset:            
             zip.write(file, os.path.basename(file))
 
     # Send the zip file to the client
@@ -481,12 +457,10 @@ def download_subset(session_id):
 def init_new_session():
     new_hash = uuid.uuid4().hex
 
-    config = SessionConfig(
+    client = FileClient(
         root_dir = app.config['MEDIA_FOLDER'],
-        user = "testuser",
         session_id = new_hash,
     )
-    client = FileClient(config)
     client.create_dir()
 
     return redirect(url_for('upload_form', session_id=new_hash))
@@ -494,7 +468,6 @@ def init_new_session():
 
 @app.route('/drop_session/<string:session_id>')
 def drop_session(session_id):
-
     # Remove the session from the database
     success = remove_session_for_user('testuser', session_id)
     if success:
@@ -502,53 +475,35 @@ def drop_session(session_id):
     else:
         logging.info(f"Something went wrong when attempting to remove session {session_id}.")
 
-
-    # drop_session_url = f"{app.config['DATABASE_HOST']}:{app.config['DATABASE_PORT']}/drop_session"
-    # response = requests.post(drop_session_url, json={"username":"testuser", "_id": session_id})
-
-
-
-    config = SessionConfig(
+    client = FileClient(
         root_dir = app.config['MEDIA_FOLDER'],
-        user = "testuser",
         session_id = session_id,
     )
-    client = FileClient(config)
     client.remove_directory()
 
     return redirect(url_for('overview', username='testuser'))
 
 
 
-class SessionConfig():
+# TODO move to utils 
+class FileClient():
     def __init__(
-                self,
-                root_dir: str,
-                user: str,
-                session_id: str,
-                embeddings_api: str ="http://127.0.0.1:5050/embed",
-            ):
+            self,
+            root_dir: str,
+            session_id: str,
+        ):
         self.root_dir = root_dir
         self.session_id = session_id
-        self.user = user
-        self.embeddings_api = embeddings_api
-
-
-
-class FileClient():
-    def __init__(self, config):
-        self.config = config
 
     def create_dir(self):
-        """ Create new dir in config.root_dir with name config.session_id. """
-        new_dir = os.path.join(self.config.root_dir, self.config.session_id)
+        """ Create new dir in root_dir with name session_id. """
+        new_dir = os.path.join(self.root_dir, self.session_id)
         assert not os.path.exists(new_dir)
         os.mkdir(new_dir)
 
-
     def remove_directory(self):
-        dir_to_remove = os.path.join(self.config.root_dir, self.config.session_id)
-        zip_to_remove = os.path.join(self.config.root_dir, f"{self.config.session_id}.zip")
+        dir_to_remove = os.path.join(self.root_dir, self.session_id)
+        zip_to_remove = os.path.join(self.root_dir, f"{self.session_id}.zip")
         assert os.path.exists(dir_to_remove)
 
         try:
@@ -574,7 +529,7 @@ class FileClient():
         except OSError as e:
             logging.info(f"Error: {dir_to_remove} : {e.strerror}")
     
-
+    # TODO add zipping here
 
 
 if __name__ == '__main__':
