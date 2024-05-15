@@ -19,15 +19,14 @@ from sqlalchemy import Index, Enum
 import utils
 
 # TODOs
-# TODO separate routes from database functions (?)
-# TODO make zipping part of file client class
-# TODO add timestamps to the overview page (?)
+# TODO auth0 integration
 # TODO sort out mixed use of id and session_token in database tables
 # TODO get rid of unnecessary arguments for routing functions if possible
 # TODO add indices to database tables
+# TODO rename sessions to something else in order to avoid confusion with flask session
 
 
-ENV_FILE = find_dotenv('.env.dev')
+ENV_FILE = find_dotenv('.env.dev') # TODO make this flag dependent
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
@@ -35,16 +34,16 @@ if ENV_FILE:
 db = SQLAlchemy() # maybe make this upper case (?)
 
 
-# db related
 class User(db.Model):
     __tablename__: str = 'users'
     id: int = db.Column(db.Integer, primary_key=True)
-    username: str = db.Column(db.String(255), nullable=False, unique=True)
-    email: str = db.Column(db.String(255), nullable=False)
+    email: str = db.Column(db.String(255), nullable=False, unique=True)
+    nickname: str = db.Column(db.String(255))
     subscribed: bool = db.Column(db.Boolean, default=False)
 
     def __repr__(self) -> str:
-        return f"User('{self.username}', '{self.email}')"
+        return f"User('{self.nickname}', '{self.email}')"
+
 
 
 
@@ -75,16 +74,17 @@ class Embedding(db.Model):
         return f"Embedding('{self.display_path}', '{self.download_path}', '{self.session_token}', '{self.status}')"
 
 
-
-def add_user(username: str, email: str, subscribed: bool = False) -> User:
-    new_user = User(username=username, email=email, subscribed=subscribed)
+def add_user(email: str, nickname="", subscribed: bool = False) -> User:
+    new_user = User(email=email, nickname=nickname, subscribed=subscribed)
     db.session.add(new_user)
     db.session.commit()
 
     return new_user
 
-def add_session_for_user(username: str, session_token: str) -> Session:
-    user = User.query.filter_by(username=username).first()
+
+
+def add_session_for_user(email: str, session_token: str) -> Session:
+    user = User.query.filter_by(email=email).first()
     if user:
         new_session = Session(user_id=user.id, session_token=session_token)
         db.session.add(new_session)
@@ -93,13 +93,15 @@ def add_session_for_user(username: str, session_token: str) -> Session:
     else:
         return None
 
-def get_sessions_for_user(username: str) -> List[Session]:
-    user = User.query.filter_by(username=username).first()
+
+def get_sessions_for_user(email: str) -> List[Session]:
+    user = User.query.filter_by(email=email).first()
     if user:
         sessions = Session.query.filter_by(user_id=user.id).all()
         return sessions
     else:
         return None
+
 
 def add_embedding_for_session(session_id: int, display_path: str, download_path: str, embedding: np.ndarray) -> Embedding:
     session = Session.query.get(session_id)
@@ -111,8 +113,9 @@ def add_embedding_for_session(session_id: int, display_path: str, download_path:
     else:
         return None
 
-def remove_session_for_user(username: str, session_token: str) -> bool:
-    user = User.query.filter_by(username=username).first()
+
+def remove_session_for_user(email: str, session_token: str) -> bool:
+    user = User.query.filter_by(email=email).first()
     if user:
         session = Session.query.filter_by(user_id=user.id, session_token=session_token).first()
         if session:
@@ -130,7 +133,6 @@ def remove_session_for_user(username: str, session_token: str) -> bool:
             return False
     else:
         return False
-
 
 def get_images_to_keep(session_id: str) -> List[str]:
     embeddings = Embedding.query.filter_by(session_token=session_id).all()
@@ -199,7 +201,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # add_user('testuser', 'testuser@testmail.com')
+        # add_user('testuser@testmail.com', 'testuser')
 
 
     return app
@@ -266,7 +268,8 @@ def sweep_decision(session_id, img_path_left, img_path_right): # TODO replace AP
 def image_clicked(position, session_id, clicked_img_path, other_img_path):
     if clicked_img_path.split("/")[-1] == 'endofline.jpg':
         _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_keep')
-        return redirect(url_for('overview', username='testuser'))
+        return redirect(url_for('overview', email='testuser@testmail.com'))
+
     _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_discard')
     try:
         clicked_img = get_image_by_path(session_id, clicked_img_path)
@@ -321,19 +324,19 @@ def select_seed_image():
     logging.info("Button clicked - selecting new seed image...")
     return redirect(url_for('sweep_decision'))
 
+
 @app.route('/end_session', methods=['GET'])
 def end_session():
     logging.info("Button clicked - returning to session overview...")
-    return redirect(url_for('overview', username='testuser'))
+    return redirect(url_for('overview', email='testuser@testmail.com'))
 
 
-
-@app.route('/overview/<string:username>')
-def overview(username: str):
+@app.route('/overview/<string:email>')
+def overview(email: str):
     """Renders an overview page listing sessions for a given user."""
 
     with app.app_context():
-        sessions_list = get_sessions_for_user(username)
+        sessions_list = get_sessions_for_user(email)
 
     session_images = {}  # Dictionary to store session IDs and their corresponding image paths
 
@@ -343,9 +346,7 @@ def overview(username: str):
         image_paths = [embedding.display_path for embedding in embeddings]
         session_images[session_id.session_token] = image_paths
 
-    # TODO add timestamps to the overview page
     return render_template('overview.html', sessions_list=[sess.session_token for sess in sessions_list], session_images=session_images)
-
 
 
 @app.route('/upload_form/<string:session_id>')
@@ -377,7 +378,7 @@ def upload_done(session_id):
 def embed_images(session_id):
 
     image_dir = f"{app.config['MEDIA_FOLDER']}/{session_id}"
-    new_session = add_session_for_user('testuser', session_id)
+    new_session = add_session_for_user('testuser@testmail.com', session_id)
 
     logging.info(f"New session added with ID {new_session.id}")
 
@@ -403,7 +404,7 @@ def embed_images(session_id):
             logging.info(f"Something went wrong when attempting to add image {display_path}")
 
     # Once everything is inserted, go to overview page where added session should be listed...
-    return redirect(url_for('overview', username='testuser'))
+    return redirect(url_for('overview', email='testuser@testmail.com'))
 
 
 
@@ -425,7 +426,7 @@ def download_subset(session_id):
     subset = get_images_to_keep(session_id)
     if not subset:
         # TODO send message to client that no images were selected
-        return redirect(url_for('overview', username='testuser'))
+        return redirect(url_for('overview', email='testuser@testmail.com'))
     
     # Create a zip file containing all uploaded files
     zip_filename = file_client.zip_dir(subset)
@@ -449,7 +450,7 @@ def init_new_session():
 @app.route('/drop_session/<string:session_id>')
 def drop_session(session_id):
     """ Remove a session and all its contents from the database and the media directory."""
-    success = remove_session_for_user('testuser', session_id)
+    success = remove_session_for_user('testuser@testmail.com', session_id)
     if success:
         logging.info(f"Session {session_id} successfully removed from database.")
     else:
@@ -461,7 +462,7 @@ def drop_session(session_id):
     )
     client.remove_directory()
 
-    return redirect(url_for('overview', username='testuser'))
+    return redirect(url_for('overview', email='testuser@testmail.com'))
 
 
 
