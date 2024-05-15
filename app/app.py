@@ -7,11 +7,7 @@ import random
 import uuid
 import numpy as np
 
-from zipfile import ZipFile
-import rawpy
-from PIL import Image
-
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import requests
 from werkzeug.utils import secure_filename
 
@@ -19,20 +15,21 @@ from flask_sqlalchemy import SQLAlchemy
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Index, Enum
 
+import utils
 
 # TODOs
 # TODO separate routes from database functions (?)
-# TODO separate utility functions to separate file (utils.py)
 # TODO make zipping part of file client class
 # TODO add timestamps to the overview page (?)
 # TODO sort out mixed use of id and session_token in database tables
-
+# TODO get rid of unnecessary arguments for routing functions if possible
+# TODO add indices to database tables
 
 # Create the SQLAlchemy instance
-db = SQLAlchemy()
+db = SQLAlchemy() # maybe make this upper case (?)
 
 
-# DB related
+# db related
 class User(db.Model):
     __tablename__: str = 'users'
     id: int = db.Column(db.Integer, primary_key=True)
@@ -70,8 +67,6 @@ class Embedding(db.Model):
 
     def __repr__(self) -> str:
         return f"Embedding('{self.display_path}', '{self.download_path}', '{self.session_token}', '{self.status}')"
-
-
 
 
 
@@ -130,6 +125,7 @@ def remove_session_for_user(username: str, session_token: str) -> bool:
     else:
         return False
 
+
 def get_images_to_keep(session_id: str) -> List[str]:
     embeddings = Embedding.query.filter_by(session_token=session_id).all()
     images_to_keep = []
@@ -138,8 +134,10 @@ def get_images_to_keep(session_id: str) -> List[str]:
             images_to_keep.append(embedding.download_path)
     return images_to_keep
 
+
 def get_image_by_path(session_id: str, image_path: str) -> Embedding:
     return Embedding.query.filter_by(session_token=session_id, display_path=image_path).first()
+
 
 def get_starting_image(session_id: str) -> Optional[Embedding]:
     unreviewed_images = Embedding.query.filter_by(session_token=session_id, status='unreviewed').all()
@@ -176,16 +174,6 @@ def update_image_status(session_id: str, update_image_path: str, set_status_to:s
 
 
 
-
-# TODO remove to utils
-def strip_media_folder_from_path(path):
-    return path.replace(app.config['MEDIA_FOLDER'] + '/', '')
-
-
-
-
-
-
 # App related functions and routes
 def create_app():
     # Create the Flask app
@@ -210,7 +198,7 @@ def create_app():
 app = create_app()
 
 
-
+# Routes
 @app.route('/media/<path:filename>')
 def media(filename):
     # Define the directory where your images are located
@@ -377,7 +365,6 @@ def upload_image(session_id):
 def upload_done(session_id):
     return f'Upload for {session_id} completed'
 
-# TODO remove uploading part and rename to embed_images
 @app.route('/embed_images/<string:session_id>', methods=['GET', 'POST'])
 def embed_images(session_id):
 
@@ -390,7 +377,7 @@ def embed_images(session_id):
         # We add the jpg twin for ease of processing if the image is in raw (dng) format
         if img_path.endswith(("dng", "DNG")):
             logging.info("dng detected... converting")
-            display_path, download_path = convert_dng_to_jpg(os.path.join(image_dir, img_path))
+            display_path, download_path = utils.convert_dng_to_jpg(os.path.join(image_dir, img_path))
         else:
             display_path, download_path = os.path.join(image_dir, img_path), os.path.join(image_dir, img_path)
 
@@ -401,7 +388,7 @@ def embed_images(session_id):
         embedding = np.random.rand(384)
 
         # Write the embedding to the database
-        embedding_row = add_embedding_for_session(new_session.id, strip_media_folder_from_path(display_path), download_path, embedding)
+        embedding_row = add_embedding_for_session(new_session.id, utils.strip_media_folder_from_path(app.config['MEDIA_FOLDER'], display_path), download_path, embedding)
         if embedding_row:
             logging.info(f"Image {display_path} added successfully. ..")
         else:
@@ -412,33 +399,19 @@ def embed_images(session_id):
 
 
 
-
-# TODO move to utils
-def convert_dng_to_jpg(dng_path):
-    # Open the DNG file
-    with rawpy.imread(dng_path) as raw:
-        # Convert to RGB array
-        rgb = raw.postprocess()
-    
-    # Create a PIL Image object from the RGB array
-    img = Image.fromarray(rgb)
-    # Get the directory and filename of the DNG file
-    directory, filename = os.path.split(dng_path)
-    # Generate the path for the JPG file in the same directory
-    jpg_path = os.path.join(directory, os.path.splitext(filename)[0] + ".jpg")
-    # Save the PIL Image as a JPG file
-    img.save(jpg_path)
-    
-    return jpg_path, dng_path
-
-
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/download/<string:session_id>', methods=['GET'])
 def download_subset(session_id):
-    upload_dir = os.path.join(app.config['MEDIA_FOLDER'], session_id)
+    file_client = utils.FileClient(
+        media_folder = app.config['MEDIA_FOLDER'],
+        session_id = session_id,
+    )
+    # TODO make this part of the FileClient class
+    upload_dir = file_client.upload_dir
+
     if not os.path.exists(upload_dir):
         return "Session ID not found", 404
     subset = get_images_to_keep(session_id)
@@ -447,13 +420,7 @@ def download_subset(session_id):
         return redirect(url_for('overview', username='testuser'))
     
     # Create a zip file containing all uploaded files
-    # TODO make this part of the FileClient class
-    zip_filename = f"{session_id}.zip"
-    zip_filepath = os.path.join(app.config['MEDIA_FOLDER'], zip_filename)
-    with ZipFile(zip_filepath, 'w') as zip:
-        for file in subset:            
-            zip.write(file, os.path.basename(file))
-
+    zip_filename = file_client.zip_dir(subset)
     # Send the zip file to the client
     return send_from_directory(app.config['MEDIA_FOLDER'], zip_filename, as_attachment=True)
 
@@ -462,8 +429,8 @@ def download_subset(session_id):
 def init_new_session():
     new_hash = uuid.uuid4().hex
 
-    client = FileClient(
-        root_dir = app.config['MEDIA_FOLDER'],
+    client = utils.FileClient(
+        media_folder = app.config['MEDIA_FOLDER'],
         session_id = new_hash,
     )
     client.create_dir()
@@ -473,15 +440,15 @@ def init_new_session():
 
 @app.route('/drop_session/<string:session_id>')
 def drop_session(session_id):
-    # Remove the session from the database
+    """ Remove a session and all its contents from the database and the media directory."""
     success = remove_session_for_user('testuser', session_id)
     if success:
         logging.info(f"Session {session_id} successfully removed from database.")
     else:
         logging.info(f"Something went wrong when attempting to remove session {session_id}.")
 
-    client = FileClient(
-        root_dir = app.config['MEDIA_FOLDER'],
+    client = utils.FileClient(
+        media_folder = app.config['MEDIA_FOLDER'],
         session_id = session_id,
     )
     client.remove_directory()
@@ -489,52 +456,6 @@ def drop_session(session_id):
     return redirect(url_for('overview', username='testuser'))
 
 
-
-# TODO move to utils 
-class FileClient():
-    def __init__(
-            self,
-            root_dir: str,
-            session_id: str,
-        ):
-        self.root_dir = root_dir
-        self.session_id = session_id
-
-    def create_dir(self):
-        """ Create new dir in root_dir with name session_id. """
-        new_dir = os.path.join(self.root_dir, self.session_id)
-        assert not os.path.exists(new_dir)
-        os.mkdir(new_dir)
-
-    def remove_directory(self):
-        dir_to_remove = os.path.join(self.root_dir, self.session_id)
-        zip_to_remove = os.path.join(self.root_dir, f"{self.session_id}.zip")
-        assert os.path.exists(dir_to_remove)
-
-        try:
-            os.remove(zip_to_remove)
-            logging.info(f"Zipfile '{zip_to_remove}' successfully removed.")
-        except FileNotFoundError as e:
-            logging.info(f"No file {zip_to_remove} found: {e.strerror}")
-
-        try:
-            # Iterate over all files and subdirectories in the directory
-            for root, dirs, files in os.walk(dir_to_remove, topdown=False):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    os.remove(file_path)  # Remove each file
-
-                for dir in dirs:
-                    dir_path = os.path.join(root, dir)
-                    os.rmdir(dir_path)  # Remove each subdirectory
-
-            # After all files and subdirectories are removed, remove the empty directory itself
-            os.rmdir(dir_to_remove)
-            logging.info(f"Directory '{dir_to_remove}' successfully removed.")
-        except OSError as e:
-            logging.info(f"Error: {dir_to_remove} : {e.strerror}")
-    
-    # TODO add zipping here
 
 
 if __name__ == '__main__':
