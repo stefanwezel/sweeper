@@ -20,6 +20,13 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import Index, Enum
 
 
+# TODOs
+# TODO separate routes from database functions (?)
+# TODO separate utility functions to separate file (utils.py)
+# TODO make zipping part of file client class
+# TODO add timestamps to the overview page (?)
+# TODO sort out mixed use of id and session_token in database tables
+
 
 # Create the SQLAlchemy instance
 db = SQLAlchemy()
@@ -291,9 +298,7 @@ def image_clicked(position, session_id, clicked_img_path, other_img_path):
 
 @app.route('/continue_clicked/<string:position>/<string:session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
 def continue_clicked(position, session_id, clicked_img_path, other_img_path):
-    img_path = request.form.get('img_path')
     _ = update_image_status(session_id, other_img_path, set_status_to='reviewed_keep')
-    # nearest_neighbor_path = get_nearest_neighbor(session_id, img_path)
     clicked_img = get_image_by_path(session_id, clicked_img_path)
     nearest_neighbor_path = get_nearest_neighbor(session_id, clicked_img.id).display_path
 
