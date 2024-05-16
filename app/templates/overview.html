@@ -6,6 +6,13 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+  <div class="dropdown">
+    <button class="logout-button">⚙️</button>
+    <div class="dropdown-content">
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
   <div class="page-wrapper fixed-top">
     <h1 class="sessions-header">Sessions</h1>
 

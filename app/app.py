@@ -7,8 +7,9 @@ from dotenv import find_dotenv, load_dotenv
 import random
 import uuid
 import numpy as np
+import json
 
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session, jsonify
 import requests
 from werkzeug.utils import secure_filename
 
@@ -16,14 +17,18 @@ from flask_sqlalchemy import SQLAlchemy
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Index, Enum
 
+from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user
+from authlib.integrations.flask_client import OAuth
+from urllib.parse import quote_plus, urlencode
+
+
 import utils
 
 # TODOs
-# TODO auth0 integration
 # TODO sort out mixed use of id and sweep_session_token in database tables
 # TODO get rid of unnecessary arguments for routing functions where possible
 # TODO add indices to database tables
-
+# TODO add login_required where suitable
 
 ENV_FILE = find_dotenv('.env.dev') # TODO make this flag dependent
 if ENV_FILE:
@@ -81,7 +86,6 @@ def add_user(email: str, nickname="", subscribed: bool = False) -> User:
     return new_user
 
 
-
 def add_session_for_user(email: str, sweep_session_token: str) -> SweepSession:
     user = User.query.filter_by(email=email).first()
     if user:
@@ -132,6 +136,7 @@ def remove_session_for_user(email: str, sweep_session_token: str) -> bool:
             return False
     else:
         return False
+
 
 def get_images_to_keep(sweep_session_id: str) -> List[str]:
     embeddings = Embedding.query.filter_by(sweep_session_token=sweep_session_id).all()
@@ -206,12 +211,72 @@ def create_app():
     return app
 app = create_app()
 
+# User management
+oauth = OAuth(app)
+login_manager = LoginManager()
 
-# Routes
+class FlaskUser(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return FlaskUser(user_id)
+
+
+
+oauth.register(
+    "auth0",
+    client_id=os.getenv("AUTH0_CLIENT_ID"),
+    client_secret=os.getenv("AUTH0_CLIENT_SECRET"),
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url=f'https://{os.getenv("AUTH0_DOMAIN")}/.well-known/openid-configuration'
+)
+login_manager.init_app(app)
+
+
+@app.route("/login")
+def login():
+    return oauth.auth0.authorize_redirect(
+        redirect_uri=url_for("callback", _external=True)
+    )
+
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    token = oauth.auth0.authorize_access_token() # token contains the user info
+    session["user"] = token
+    user_email = session.get('user').get('name')
+    login_user(FlaskUser(user_email))
+    return redirect("/overview")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(
+        "https://" + os.getenv("AUTH0_DOMAIN")
+        + "/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": url_for("home", _external=True),
+                "client_id": os.getenv("AUTH0_CLIENT_ID"),
+            },
+            quote_via=quote_plus,
+        )
+    )
+
+# Routes (non-user management related)
 @app.route("/")
 def home():
-    return "hello"
-    # return render_template("home.html", session=session.get('user'), pretty=json.dumps(session.get('user'), indent=4))
+    return render_template("home.html", session=session.get('user'), pretty=json.dumps(session.get('user'), indent=4))
+
+
+@app.route("/profile")
+@login_required
+def profile():
+    # TODO add html for this route
+    return jsonify(session.get('user'))
 
 
 @app.route('/media/<path:filename>')
@@ -222,9 +287,9 @@ def media(filename):
     return send_from_directory(media_folder, filename)
 
 
-
 @app.route('/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>')
-def sweep_decision(sweep_session_id, img_path_left, img_path_right): # TODO replace API calls with database queries
+@login_required
+def sweep_decision(sweep_session_id, img_path_left, img_path_right):
     if img_path_left == 'initial':
         starting_image = get_starting_image(sweep_session_id)
         if starting_image:
@@ -270,10 +335,11 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right): # TODO repl
 
 
 @app.route('/image_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
+@login_required
 def image_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
     if clicked_img_path.split("/")[-1] == 'endofline.jpg':
         _ = update_image_status(sweep_session_id, other_img_path, set_status_to='reviewed_keep')
-        return redirect(url_for('overview', email='testuser@testmail.com'))
+        return redirect(url_for('overview'))
 
     _ = update_image_status(sweep_session_id, other_img_path, set_status_to='reviewed_discard')
     try:
@@ -301,6 +367,7 @@ def image_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
 
 
 @app.route('/continue_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>', methods=['POST'])
+@login_required
 def continue_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
     _ = update_image_status(sweep_session_id, other_img_path, set_status_to='reviewed_keep')
     clicked_img = get_image_by_path(sweep_session_id, clicked_img_path)
@@ -333,15 +400,16 @@ def select_seed_image():
 @app.route('/end_session', methods=['GET'])
 def end_session():
     logging.info("Button clicked - returning to session overview...")
-    return redirect(url_for('overview', email='testuser@testmail.com'))
+    return redirect(url_for('overview'))
 
 
-@app.route('/overview/<string:email>')
-def overview(email: str):
+
+@app.route('/overview')
+@login_required
+def overview():
     """Renders an overview page listing sessions for a given user."""
-
     with app.app_context():
-        sweep_sessions_list = get_sessions_for_user(email)
+        sweep_sessions_list = get_sessions_for_user(session.get('user')['userinfo']['name'])
 
     sweep_session_images = {}  # Dictionary to store session IDs and their corresponding image paths
 
@@ -351,10 +419,15 @@ def overview(email: str):
         image_paths = [embedding.display_path for embedding in embeddings]
         sweep_session_images[sweep_session_id.sweep_session_token] = image_paths
 
-    return render_template('overview.html', sweep_sessions_list=[sess.sweep_session_token for sess in sweep_sessions_list], sweep_session_images=sweep_session_images)
+    return render_template(
+        'overview.html',
+        sweep_sessions_list=[sess.sweep_session_token for sess in sweep_sessions_list],
+        sweep_session_images=sweep_session_images
+        )
 
 
 @app.route('/upload_form/<string:sweep_session_id>')
+@login_required
 def upload_form(sweep_session_id):
     return render_template('upload.html', sweep_session_id=sweep_session_id)
 
@@ -409,7 +482,7 @@ def embed_images(sweep_session_id):
             logging.info(f"Something went wrong when attempting to add image {display_path}")
 
     # Once everything is inserted, go to overview page where added session should be listed...
-    return redirect(url_for('overview', email='testuser@testmail.com'))
+    return redirect(url_for('overview'))
 
 
 
@@ -431,7 +504,7 @@ def download_subset(sweep_session_id):
     subset = get_images_to_keep(sweep_session_id)
     if not subset:
         # TODO send message to client that no images were selected
-        return redirect(url_for('overview', email='testuser@testmail.com'))
+        return redirect(url_for('overview'))
     
     # Create a zip file containing all uploaded files
     zip_filename = file_client.zip_dir(subset)
@@ -467,7 +540,7 @@ def drop_sweep_session(sweep_session_id):
     )
     client.remove_directory()
 
-    return redirect(url_for('overview', email='testuser@testmail.com'))
+    return redirect(url_for('overview'))
 
 
 
