@@ -6,7 +6,7 @@ We will go over some basic steps to get a local version of the app running. This
 
 
 ## Pre-requisites
-- `Postgresql` instance with a database called `sweeper`
+- `Postgresql` instance with a database called `sweeper` and `pgvector` extension (see https://github.com/pgvector/pgvector)
 - `.env` file defning a media folder, database-uri, and authenticication variables.
 
 ## Get-started
