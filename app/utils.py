@@ -10,21 +10,21 @@ class FileClient():
     def __init__(
             self,
             media_folder: str,
-            session_id: str,
+            sweep_session_id: str,
         ) -> None:
         self.media_folder = media_folder
-        self.session_id = session_id
-        self.upload_dir = os.path.join(self.media_folder, self.session_id)
+        self.sweep_session_id = sweep_session_id
+        self.upload_dir = os.path.join(self.media_folder, self.sweep_session_id)
 
     def create_dir(self) -> None:
-        """ Create new dir in media_folder with name session_id. """
+        """ Create new dir in media_folder with name sweep_session_id. """
         new_dir: str = self.upload_dir
         assert not os.path.exists(new_dir)
         os.mkdir(new_dir)
 
     def remove_directory(self) -> None:
         dir_to_remove: str = self.upload_dir
-        zip_to_remove: str = os.path.join(self.media_folder, f"{self.session_id}.zip")
+        zip_to_remove: str = os.path.join(self.media_folder, f"{self.sweep_session_id}.zip")
         assert os.path.exists(dir_to_remove)
 
         try:
@@ -49,7 +49,7 @@ class FileClient():
             logging.info(f"Error: {dir_to_remove} : {e.strerror}")
     
     def zip_dir(self, subset: List[str]) -> str:
-        zip_filename: str = f"{self.session_id}.zip"
+        zip_filename: str = f"{self.sweep_session_id}.zip"
         zip_filepath: str = os.path.join(self.media_folder, zip_filename)
         with ZipFile(zip_filepath, 'w') as zip:
             for file in subset:            

@@ -10,25 +10,25 @@
     <h1 class="sessions-header">Sessions</h1>
 
     <div class="session-container">
-      <a href="{{ url_for('init_new_session') }}">
+      <a href="{{ url_for('init_new_sweep_session') }}">
         <button class="new-session-button">🆕 New session</button>
       </a>
     </div>
-    {% for session in sessions_list %}
+    {% for session in sweep_sessions_list %}
     <div class="session-container">
       <!-- Thumbnail images for each session -->
-      {% for image_path in session_images[session] %}
+      {% for image_path in sweep_session_images[session] %}
       <img src="{{ url_for('media', filename=image_path) }}" alt="Thumbnail {{ url_for('media', filename=image_path) }}" class="thumbnail-img">
       {% endfor %}
       
       <!-- Buttons for actions related to the session -->
-      <a href="{{ url_for('drop_session', session_id=session) }}">
+      <a href="{{ url_for('drop_sweep_session', sweep_session_id=session) }}">
         <button class="drop-session-button">🗑️ Drop</button>
       </a>
-      <a href="{{ url_for('download_subset', session_id=session) }}">
+      <a href="{{ url_for('download_subset', sweep_session_id=session) }}">
         <button class="download-button">⬇️ Download files</button>
       </a>
-      <a href="{{ url_for('sweep_decision', session_id=session, img_path_left='initial', img_path_right='initial') }}">
+      <a href="{{ url_for('sweep_decision', sweep_session_id=session, img_path_left='initial', img_path_right='initial') }}">
         <button class="open-session-button">📁 Open session {{ session }}</button>
       </a>
     </div>
