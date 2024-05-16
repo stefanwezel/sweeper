@@ -6,7 +6,9 @@ We will go over some basic steps to get a local version of the app running. This
 
 
 ## Pre-requisites
-- `Postgresql` instance with a database called `sweeper` and `pgvector` extension (see https://github.com/pgvector/pgvector)
+- `Postgresql` instance with a database called `sweeper`
+	- Download and installation instructions can be found here: https://www.postgresql.org/download/ 
+- Add (and install) the `pgvector` extension (see https://github.com/pgvector/pgvector)
 - `.env` file defning a media folder, database-uri, and authenticication variables.
 
 ## Get-started
@@ -24,5 +26,5 @@ We will go over some basic steps to get a local version of the app running. This
 	```sql
 	insert into users (email, nickname) values ('testuser@testmail.com', 'testuser');
 	```
-- Now, you should be able to navigate to an [example overview page](http://127.0.0.1:5000/overview/testuser@testmail.com)
-- 😺 Happy development! 
+- Now, you should be able to navigate to an [example overview page](http://127.0.0.1:5000/overview)
+- 😺 Happy development!
