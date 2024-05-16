@@ -20,9 +20,9 @@
         const file = input.files[i];
         const formData = new FormData();
         formData.append('files', file);
-        await fetch('/upload_image/{{ session_id }}', { method: 'POST', body: formData });
+        await fetch('/upload_image/{{ sweep_session_id }}', { method: 'POST', body: formData });
       }
-      window.location.href = '/embed_images/{{ session_id }}';
+      window.location.href = '/embed_images/{{ sweep_session_id }}';
     }
   </script>
 </body>
