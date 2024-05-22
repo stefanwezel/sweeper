@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">  
+</head>
+<body>
+    <div class="profile-info">
+
+    <h1>Profile</h1>
+    <p>Name: {{ user_info['userinfo']['name'] }}</p>
+    <p>Nickname: {{ user_info['userinfo']['nickname'] }}</p>
+    <button class="back-button" onclick="location.href='{{ url_for('overview') }}'">Back to Overview</button>
+</div>
+</body>
+</html>
