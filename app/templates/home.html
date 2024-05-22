@@ -3,15 +3,16 @@
     <meta charset="utf-8" />
     <title>Welcome to Sweeper</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   </head>
-  <body>
+  <body class="simple-text-page">
     {% if session %}
-        <h1>Welcome {{session.userinfo.name}}!</h1>
-        <p><a href="/logout">Logout</a></p>
-        <div><pre>{{pretty}}</pre></div>
-    {% else %}
-        <h1>Welcome Guest</h1>
-        <p><a href="/login">Login</a></p>
-    {% endif %}
+    <h1>Welcome {{session.userinfo.name}}!</h1>
+    <button class="transparent-text-button" onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+    <div><pre>{{pretty}}</pre></div>
+{% else %}
+    <h1>Welcome Guest</h1>
+    <button class="transparent-text-button" onclick="location.href='{{ url_for('login') }}'">Login</button>
+{% endif %}
   </body>
 </html>
