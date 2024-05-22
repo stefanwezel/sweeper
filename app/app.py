@@ -85,6 +85,9 @@ def add_user(email: str, nickname="", subscribed: bool = False) -> User:
 
     return new_user
 
+def get_user(email: str) -> User:
+    return User.query.filter_by(email=email).first()
+
 
 def add_session_for_user(email: str, sweep_session_token: str) -> SweepSession:
     user = User.query.filter_by(email=email).first()
@@ -205,7 +208,6 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # add_user('testuser@testmail.com', 'testuser')
 
 
     return app
@@ -245,9 +247,18 @@ def login():
 
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
-    token = oauth.auth0.authorize_access_token() # token contains the user info
+    token = oauth.auth0.authorize_access_token()  # token from auth0 contains the all the user info
     session["user"] = token
-    user_email = session.get('user').get('name')
+    user_email = session['user']['userinfo']['name']
+    user_nickname = session['user']['userinfo']['nickname']
+    
+    # Check if user exists in the database
+    user = get_user(user_email)
+    # If user doesn't exist, create a new user
+    if not user:
+        add_user(user_email, user_nickname)
+        logging.info(f"User {user_email} added to database.")
+
     login_user(FlaskUser(user_email))
     return redirect("/overview")
 
@@ -456,7 +467,8 @@ def upload_done(sweep_session_id):
 def embed_images(sweep_session_id):
 
     image_dir = f"{app.config['MEDIA_FOLDER']}/{sweep_session_id}"
-    new_sweep_session = add_session_for_user('testuser@testmail.com', sweep_session_id)
+
+    new_sweep_session = add_session_for_user(session.get('user')['userinfo']['name'], sweep_session_id)
 
     logging.info(f"New session added with ID {new_sweep_session.id}")
 
@@ -528,7 +540,7 @@ def init_new_sweep_session():
 @app.route('/drop_sweep_session/<string:sweep_session_id>')
 def drop_sweep_session(sweep_session_id):
     """ Remove a session and all its contents from the database and the media directory."""
-    success = remove_session_for_user('testuser@testmail.com', sweep_session_id)
+    success = remove_session_for_user(session.get('user')['userinfo']['name'], sweep_session_id)
     if success:
         logging.info(f"SweepSession {sweep_session_id} successfully removed from database.")
     else:
