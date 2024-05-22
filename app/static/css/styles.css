@@ -283,3 +283,19 @@ margin-bottom: 10px; /* Add spacing between containers */
 .dropdown:hover .dropdown-content {
   display: block;
 }
+.profile-info {
+  font-family: 'Hack', monospace;
+  color: white;
+  text-align: center;
+}
+.back-button {
+  background-color: transparent; /* Background color */
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  padding: 10px 20px; /* Padding for better appearance */
+  color: white; /* Text color */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  text-decoration: none; /* Remove underline from anchor tag */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+}

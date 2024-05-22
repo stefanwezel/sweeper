@@ -283,12 +283,18 @@ def home():
     return render_template("home.html", session=session.get('user'), pretty=json.dumps(session.get('user'), indent=4))
 
 
+# @app.route("/profile")
+# @login_required
+# def profile():
+#     # TODO add html for this route
+#     return jsonify(session.get('user'))
 @app.route("/profile")
 @login_required
 def profile():
-    # TODO add html for this route
-    return jsonify(session.get('user'))
+    user_info = session.get('userinfo')
+    user_info = session.get('user')
 
+    return render_template("profile.html", user_info=user_info)
 
 @app.route('/media/<path:filename>')
 def media(filename):
