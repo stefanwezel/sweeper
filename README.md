@@ -21,10 +21,8 @@ We will go over some basic steps to get a local version of the app running. This
 - Run `python app.py`
 	- this will create the tables
 - In the browser, navigate to [the landing page](127.0.0.1:5000) to check that the app is running
-- Connect to your `Postgresql` instance (i.e. through `sudo -u postgres psql`)
-- Seed the table users with an example user by running
-	```sql
-	insert into users (email, nickname) values ('testuser@testmail.com', 'testuser');
-	```
+- If you use a local database, you will probably not have any users yet
+	- Use the `login` button of [the landing page](127.0.0.1:5000) and you will be redirected to auth0 authenticication
+	- There, you can 'sign-up' which will create a new user
 - Now, you should be able to navigate to an [example overview page](http://127.0.0.1:5000/overview)
 - 😺 Happy development!
