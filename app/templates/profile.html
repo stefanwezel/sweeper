@@ -11,7 +11,8 @@
     <h1>Profile</h1>
     <p>Name: {{ user_info['userinfo']['name'] }}</p>
     <p>Nickname: {{ user_info['userinfo']['nickname'] }}</p>
-    <button class="transparent-text-button" onclick="location.href='{{ url_for('overview') }}'">Back to Overview</button>
+    <button class="transparent-text-button" onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+    <button class="transparent-text-button" onclick="location.href='{{ url_for('overview') }}'">Sessions</button>
 </div>
 </body>
 </html>
