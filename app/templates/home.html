@@ -7,11 +7,15 @@
   </head>
   <body class="simple-text-page">
     {% if session %}
-    <h1>Welcome {{session.userinfo.name}}!</h1>
+    <h1>Hello {{session.userinfo.nickname}}!</h1>
+    <h2>Welcome to 🧹 Sweeper</h2>
+    <h3>The intelligent image sorting app 💫</h3>
     <button class="transparent-text-button" onclick="location.href='{{ url_for('logout') }}'">Logout</button>
-    <div><pre>{{pretty}}</pre></div>
+    <button class="transparent-text-button" onclick="location.href='{{ url_for('overview') }}'">Sessions</button>
 {% else %}
-    <h1>Welcome Guest</h1>
+    <h1>Hello Guest</h1>
+    <h2>Welcome to 🧹 Sweeper</h2>
+    <h3>The intelligent image sorting app 💫</h3>
     <button class="transparent-text-button" onclick="location.href='{{ url_for('login') }}'">Login</button>
 {% endif %}
   </body>
