@@ -8,13 +8,13 @@
   <body class="simple-text-page">
     {% if session %}
     <h1>Hello {{session.userinfo.nickname}}!</h1>
-    <h1>Welcome to 🧹 Sweeper*</h1>
+    <h1>Welcome to ⚗️ Sweeper*</h1>
     <button class="transparent-text-button" onclick="location.href='{{ url_for('logout') }}'">Logout</button>
     <button class="transparent-text-button" onclick="location.href='{{ url_for('overview') }}'">Sessions</button>
     <h4>*The intelligent image sorting app 💫</h4>
 {% else %}
     <h1>Hello Guest</h1>
-    <h1>Welcome to 🧹 Sweeper*</h1>
+    <h1>Welcome to ⚗️ Sweeper*</h1>
     <button class="transparent-text-button" onclick="location.href='{{ url_for('login') }}'">Login | Sign up</button>
     <h4>*The intelligent image sorting app 💫</h4>
 {% endif %}

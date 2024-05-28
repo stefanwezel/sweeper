@@ -1,4 +1,4 @@
-# 🧹 Sweeper
+# ⚗️ Sweeper
 This repository contains the front, gateway and most of the backend for the sweeper image sorting app.
 
 # Installation (under construction 🚧)
