@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 
 from flask_sqlalchemy import SQLAlchemy
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Index, Enum
+from sqlalchemy import Index, Enum, func
 
 from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user
 from authlib.integrations.flask_client import OAuth
@@ -186,6 +186,17 @@ def update_image_status(sweep_session_id: str, update_image_path: str, set_statu
         return False
 
     return True
+
+def get_percentage_reviewed(sweep_session_id: str) -> int:
+    count_all = len(Embedding.query.filter(Embedding.sweep_session_token=='ef4b2f48396148b1bd360a554c4b8251').all())
+    count_reviewed = len(Embedding.query.filter(
+        Embedding.sweep_session_token=='ef4b2f48396148b1bd360a554c4b8251',
+        Embedding.status.in_(['reviewed_keep', 'reviewed_discard'])
+        ).all())
+    
+    percentage_reviewed = (count_reviewed / count_all) * 100
+
+    return percentage_reviewed
 
 
 
@@ -429,17 +440,20 @@ def overview():
         sweep_sessions_list = get_sessions_for_user(session.get('user')['userinfo']['name'])
 
     sweep_session_images = {}  # Dictionary to store session IDs and their corresponding image paths
+    sweep_session_progress_percentage = {}
 
-    for sweep_session_id in sweep_sessions_list:
+    for sweep_session in sweep_sessions_list:
         # Get the image paths for the session from the database
-        embeddings = Embedding.query.filter_by(sweep_session_token=sweep_session_id.sweep_session_token).limit(3).all()
+        embeddings = Embedding.query.filter_by(sweep_session_token=sweep_session.sweep_session_token).limit(3).all()
         image_paths = [embedding.display_path for embedding in embeddings]
-        sweep_session_images[sweep_session_id.sweep_session_token] = image_paths
+        sweep_session_images[sweep_session.sweep_session_token] = image_paths
+        sweep_session_progress_percentage[sweep_session.sweep_session_token] = get_percentage_reviewed(sweep_session.sweep_session_token)
 
     return render_template(
         'overview.html',
         sweep_sessions_list=[sess.sweep_session_token for sess in sweep_sessions_list],
-        sweep_session_images=sweep_session_images
+        sweep_session_images=sweep_session_images,
+        sweep_session_progress_percentage=sweep_session_progress_percentage
         )
 
 
@@ -488,9 +502,11 @@ def embed_images(sweep_session_id):
 
 
         # TODO replace with actual embedding from embeddings API
-        # embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
-        # response = requests.get(embedding_request_url)
-        embedding = np.random.rand(384)
+        embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
+        response = requests.get(embedding_request_url)
+        embedding = response.json()
+
+        # embedding = np.random.rand(384)
 
         # Write the embedding to the database
         embedding_row = add_embedding_for_sweep_session(new_sweep_session.id, utils.strip_media_folder_from_path(app.config['MEDIA_FOLDER'], display_path), download_path, embedding)
