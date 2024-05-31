@@ -236,19 +236,21 @@ def update_image_status(
 def get_percentage_reviewed(sweep_session_id: str) -> int:
     count_all = len(
         Embedding.query.filter(
-            Embedding.sweep_session_token == "ef4b2f48396148b1bd360a554c4b8251"
+            Embedding.sweep_session_token == sweep_session_id
         ).all()
     )
     count_reviewed = len(
         Embedding.query.filter(
-            Embedding.sweep_session_token == "ef4b2f48396148b1bd360a554c4b8251",
+            Embedding.sweep_session_token == sweep_session_id,
             Embedding.status.in_(["reviewed_keep", "reviewed_discard"]),
         ).all()
     )
+    try:
+        percentage_reviewed = (count_reviewed / count_all) * 100
+        return percentage_reviewed
 
-    percentage_reviewed = (count_reviewed / count_all) * 100
-
-    return percentage_reviewed
+    except ZeroDivisionError:
+        return 0
 
 
 # App related functions and routes
@@ -533,9 +535,10 @@ def overview():
         )
         image_paths = [embedding.display_path for embedding in embeddings]
         sweep_session_images[sweep_session.sweep_session_token] = image_paths
+        percentage = get_percentage_reviewed(sweep_session.sweep_session_token)
         sweep_session_progress_percentage[
             sweep_session.sweep_session_token
-        ] = get_percentage_reviewed(sweep_session.sweep_session_token)
+        ] = percentage
 
     return render_template(
         "overview.html",
@@ -594,12 +597,12 @@ def embed_images(sweep_session_id):
                 os.path.join(image_dir, img_path),
             )
 
-        # TODO replace with actual embedding from embeddings API
-        embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
-        response = requests.get(embedding_request_url)
-        embedding = response.json()
+        # # TODO replace with actual embedding from embeddings API
+        # embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
+        # response = requests.get(embedding_request_url)
+        # embedding = response.json()
 
-        # embedding = np.random.rand(384)
+        embedding = np.random.rand(384)
 
         # Write the embedding to the database
         embedding_row = add_embedding_for_sweep_session(
