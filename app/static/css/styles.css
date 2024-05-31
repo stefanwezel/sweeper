@@ -135,6 +135,7 @@ margin-bottom: 10px; /* Add spacing between containers */
 /* Define CSS for thumbnail images */
 .thumbnail-img {
 height: 50px; /* Adjust the width as needed */
+padding: 1px 1px; /* Adjust padding for spacing */
 width: auto; /* Maintain aspect ratio */
 max-width: 100%; /* Ensure images do not exceed the specified width */
 max-height: 100px; /* Ensure images do not exceed the specified height */
@@ -159,7 +160,7 @@ background-color: transparent; /* No background color for text */
 border: none; /* No border around button */
 color: black; /* Text color */
 font-size: 18px; /* Font size */
-padding: 10px 20px; /* Adjust padding for spacing */
+padding: 15px 30px; /* Adjust padding for spacing */
 cursor: pointer; /* Change cursor on hover */
 text-decoration: none; /* Remove underline from anchor tag */
 font-family: 'Hack', monospace; /* Use the 'Hack' font */
@@ -175,7 +176,7 @@ background-color: transparent; /* No background color for text */
 border: none; /* No border around button */
 color: black; /* Text color */
 font-size: 18px; /* Font size */
-padding: 10px 20px; /* Adjust padding for spacing */
+padding: 15px 30px; /* Adjust padding for spacing */
 cursor: pointer; /* Change cursor on hover */
 text-decoration: none; /* Remove underline from anchor tag */
 font-family: 'Hack', monospace; /* Use the 'Hack' font */
@@ -193,7 +194,7 @@ background-color: transparent; /* No background color for text */
 border: none; /* No border around button */
 color: black; /* Text color */
 font-size: 18px; /* Font size */
-padding: 10px 20px; /* Adjust padding for spacing */
+padding: 15px 30px; /* Adjust padding for spacing */
 cursor: pointer; /* Change cursor on hover */
 text-decoration: none; /* Remove underline from anchor tag */
 font-family: 'Hack', monospace; /* Use the 'Hack' font */
@@ -300,4 +301,33 @@ margin-bottom: 10px; /* Add spacing between containers */
   text-align: center;
   /* Padd 10 % from top */
   padding-top: 5%;
+}
+.session-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the start of the container */
+  padding: 10px 0; /* Add some vertical padding between sessions */
+}
+
+.session-content {
+  display: flex;
+  align-items: left;
+}
+
+.session-progress {
+  display: flex;
+  align-items: center;
+  padding: 0 10px; /* Add 10px padding to the left and right */
+}
+
+.session-progress progress {
+  padding: 15px 50px; /* Adjust padding for spacing */
+  width: 40px; /* Adjust as needed */
+  height: 20px; /* Adjust as needed */
+}
+.session-progress span {
+  margin-right: 10px; /* Add some space between the text and the progress bar */
+  font-family: 'Hack', monospace; /* Use the 'Hack' font */
+  font-size:   16px; /* Font size */
+
 }
