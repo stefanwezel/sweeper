@@ -7,25 +7,46 @@
 </head>
 <body>
   <div class="page-wrapper">
-
-      <div class="upload-container">
-    <input type="file" id="files" class="browse-button" name="files" accept="image/*,image/x-adobe-dng" multiple>
-    <button type="button" class="upload-button" onclick="uploadFiles()">Upload Images</button>
+    <div class="upload-container">
+      <input type="file" id="files" class="browse-button" name="files" accept="image/*,image/x-adobe-dng" multiple>
+      <button type="button" class="upload-button" onclick="uploadFiles()">Upload Images</button>
     </div>
-
+  </div>
+  
+  <div class="overlay" id="overlay">
+    <div class="progress-text" id="progress-text">Uploading images...</div>
+    <div class="progress-bar">
+      <div class="progress-bar-inner" id="progress-bar-inner">0%</div>
+    </div>
+    <div class="spinner" id="spinner" style="visibility: hidden;"></div>
   </div>
   <script>
     async function uploadFiles() {
       const input = document.getElementById('files');
+      const overlay = document.getElementById('overlay');
+      const progressBarInner = document.getElementById('progress-bar-inner');
+      const progressText = document.getElementById('progress-text');
+      const spinner = document.getElementById('spinner');
+      
+      overlay.style.visibility = 'visible';
+      progressText.textContent = 'Uploading images...';
+
       for (let i = 0; i < input.files.length; i++) {
         const file = input.files[i];
         const formData = new FormData();
         formData.append('files', file);
         await fetch('/upload_image/{{ sweep_session_id }}', { method: 'POST', body: formData });
+        
+        let progress = ((i + 1) / input.files.length) * 100;
+        progressBarInner.style.width = progress + '%';
+        progressBarInner.textContent = Math.round(progress) + '%';
       }
+
+      progressText.textContent = 'Embedding images... this can take a while';
+      spinner.style.visibility = 'visible'; // Show the spinner
+
       window.location.href = '/embed_images/{{ sweep_session_id }}';
     }
   </script>
 </body>
 </html>
-<!-- TODO add container here -->
