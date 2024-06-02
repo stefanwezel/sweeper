@@ -597,12 +597,12 @@ def embed_images(sweep_session_id):
                 os.path.join(image_dir, img_path),
             )
 
-        # # TODO replace with actual embedding from embeddings API
-        # embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
-        # response = requests.get(embedding_request_url)
-        # embedding = response.json()
+        # TODO replace with actual embedding from embeddings API
+        embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
+        response = requests.get(embedding_request_url)
+        embedding = response.json()
 
-        embedding = np.random.rand(384)
+        # embedding = np.random.rand(384)
 
         # Write the embedding to the database
         embedding_row = add_embedding_for_sweep_session(
