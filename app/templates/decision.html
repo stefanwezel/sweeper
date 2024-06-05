@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
+        /* .img-wrapper {
+            position: relative;
+            width: 40%;
+            height: 80vh;
+            overflow: hidden;
+            margin: 0 5%;
+        } */
+        .img-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 90vh;
+            padding: 0 2%;
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.45s ease;
+            cursor: grab;
+        }
+        .img-container img.grabbing {
+            cursor: grabbing;
+        }
+        .reset-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-family: 'Hack', monospace; /* Use the 'Hack' font */
+            font-size: 1em; /* adjust as needed */
+            padding: 5px 10px;
+        }
+        .img-container {
+    display: flex;
+    justify-content: space-between;
+}
+.img-wrapper {
+    position: relative;
+    width: 48%;
+    height: 95vh;
+    max-height: 75vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.button-group {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1;
+    align-items: flex-start;
+}
+
+.button-group:nth-of-type(1) {
+    left: 10px;
+}
+
+.img-wrapper:nth-child(2) .button-group {
+    right: 10px;
+    align-items: flex-end;
+}
+
+.select-button {
+    padding: 5px 10px;
+    font-size: 1em; /* adjust as needed */
+    font-family: 'Hack', monospace; /* Use the 'Hack' font */
+    font-size: 1em; /* adjust as needed */
+    padding: 5px 10px;
+
+}
+.keep-both-button {
+    display: block;
+    width: 20%; /* adjust as needed */
+    margin: 5px auto; /* centers the button horizontally */
+    text-align: center;
+    font-family: 'Hack', monospace; /* Use the 'Hack' font */
+    font-size: 1em; /* adjust as needed */
+    padding: 5px 10px;
+}
+.drop-both-button {
+    display: block;
+    width: 20%; /* adjust as needed */
+    margin: 5px auto; /* centers the button horizontally */
+    padding: 5px;
+    text-align: center;
+    font-family: 'Hack', monospace; /* Use the 'Hack' font */
+    font-size: 1em; /* adjust as needed */
+    padding: 5px 10px;
+
+}
+    </style>
+    <script>
+        window.onload = function() {
+            const images = document.querySelectorAll('.img-container img');
+
+            images.forEach(img => {
+                const state = {
+                    scale: 1,
+                    panX: 0,
+                    panY: 0,
+                    lastX: 0,
+                    lastY: 0,
+                    isPanning: false,
+                };
+
+                const resetButton = document.createElement('button');
+                resetButton.textContent = 'Reset Zoom';
+                resetButton.classList.add('reset-button');
+                img.parentElement.appendChild(resetButton);
+
+                resetButton.onclick = function() {
+                    state.scale = 1;
+                    state.panX = 0;
+                    state.panY = 0;
+                    img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
+                }
+
+                img.onwheel = function(e) {
+                    e.preventDefault();
+                    state.scale += e.deltaY * -0.001;
+                    state.scale = Math.min(Math.max(.125, state.scale), 4);
+                    img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
+                }
+
+                img.onmousedown = function(e) {
+                    e.preventDefault();
+                    img.classList.add('grabbing');
+                    state.lastX = e.clientX - state.panX;
+                    state.lastY = e.clientY - state.panY;
+                    state.isPanning = true;
+                }
+
+                img.onmousemove = function(e) {
+    if (state.isPanning) {
+        e.preventDefault();
+        let newPanX = e.clientX - state.lastX;
+        let newPanY = e.clientY - state.lastY;
+
+        // Limit panning to image width and height
+        const imgRect = img.getBoundingClientRect();
+        const containerRect = img.parentElement.getBoundingClientRect();
+
+        if (newPanX > 0) newPanX = 0;
+        if (newPanY > 0) newPanY = 0;
+        if (newPanX < containerRect.width - imgRect.width * state.scale) newPanX = containerRect.width - imgRect.width * state.scale;
+        if (newPanY < containerRect.height - imgRect.height * state.scale) newPanY = containerRect.height - imgRect.height * state.scale;
+
+        // Check for right and bottom boundaries
+        if (newPanX < containerRect.width - imgRect.width) newPanX = containerRect.width - imgRect.width;
+        if (newPanY < containerRect.height - imgRect.height) newPanY = containerRect.height - imgRect.height;
+
+        state.panX = newPanX;
+        state.panY = newPanY;
+
+        requestAnimationFrame(() => {
+            img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
+        });
+    }
+}
+
+                img.onmouseup = function(e) {
+                    img.classList.remove('grabbing');
+                    state.isPanning = false;
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <button class="drop-both-button">Drop Both</button>
+    <div class="img-container">
+        <div class="img-wrapper">
+            <div class="button-group">
+                <button class="select-button">Select (drop other)</button>
+                <button class="select-button">Select (keep other)</button>
+            </div>
+            <img src="{{ url_for('media', filename=img_path_left) }}" alt="Image Left">
+            <button class="reset-button">Reset Zoom</button>
+        </div>
+        <div class="img-wrapper right">
+            <img src="{{ url_for('media', filename=img_path_right) }}" alt="Image Right">
+            <button class="reset-button">Reset Zoom</button>
+            <div class="button-group">
+                <button class="select-button">Select (drop other)</button>
+                <button class="select-button">Select (keep other)</button>
+            </div>
+        </div>
+    </div>
+    <button class="keep-both-button">Keep Both</button>
+</body>
+</html>

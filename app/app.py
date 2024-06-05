@@ -377,21 +377,62 @@ def media(filename):
 @app.route(
     "/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>"
 )
-@login_required
+# @login_required
+# def sweep_decision(sweep_session_id, img_path_left, img_path_right):
+#     if img_path_left == "initial":
+#         starting_image = get_starting_image(sweep_session_id)
+#         if starting_image:
+#             nearest_neighbor = get_nearest_neighbor(sweep_session_id, starting_image.id)
+#             return render_template(
+#                 "sweep_session.html",
+#                 sweep_session_id=sweep_session_id,
+#                 img_path_left=starting_image.display_path,
+#                 img_path_right=nearest_neighbor.display_path,
+#             )
+#         else:
+#             return render_template(
+#                 "sweep_session.html",
+#                 sweep_session_id=sweep_session_id,
+#                 img_path_left="endofline.jpg",
+#                 img_path_right="endofline.jpg",
+#             )
+
+#     elif img_path_left == "endofline":
+#         return render_template(
+#             "sweep_session.html",
+#             sweep_session_id=sweep_session_id,
+#             img_path_left="endofline.jpg",
+#             img_path_right=sweep_session_id,
+#         )
+#     elif img_path_right == "endofline":
+#         return render_template(
+#             "sweep_session.html",
+#             sweep_session_id=sweep_session_id,
+#             img_path_left=sweep_session_id,
+#             img_path_right="endofline.jpg",
+#         )
+
+#     else:
+#         return render_template(
+#             "sweep_session.html",
+#             sweep_session_id=sweep_session_id,
+#             img_path_left=img_path_left,
+#             img_path_right=img_path_right,
+#         )
 def sweep_decision(sweep_session_id, img_path_left, img_path_right):
     if img_path_left == "initial":
         starting_image = get_starting_image(sweep_session_id)
         if starting_image:
             nearest_neighbor = get_nearest_neighbor(sweep_session_id, starting_image.id)
             return render_template(
-                "sweep_session.html",
+                "decision.html",
                 sweep_session_id=sweep_session_id,
                 img_path_left=starting_image.display_path,
                 img_path_right=nearest_neighbor.display_path,
             )
         else:
             return render_template(
-                "sweep_session.html",
+                "decision.html",
                 sweep_session_id=sweep_session_id,
                 img_path_left="endofline.jpg",
                 img_path_right="endofline.jpg",
@@ -399,14 +440,14 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right):
 
     elif img_path_left == "endofline":
         return render_template(
-            "sweep_session.html",
+            "decision.html",
             sweep_session_id=sweep_session_id,
             img_path_left="endofline.jpg",
             img_path_right=sweep_session_id,
         )
     elif img_path_right == "endofline":
         return render_template(
-            "sweep_session.html",
+            "decision.html",
             sweep_session_id=sweep_session_id,
             img_path_left=sweep_session_id,
             img_path_right="endofline.jpg",
@@ -414,12 +455,11 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right):
 
     else:
         return render_template(
-            "sweep_session.html",
+            "decision.html",
             sweep_session_id=sweep_session_id,
             img_path_left=img_path_left,
             img_path_right=img_path_right,
         )
-
 
 @app.route(
     "/image_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
@@ -597,12 +637,12 @@ def embed_images(sweep_session_id):
                 os.path.join(image_dir, img_path),
             )
 
-        # TODO replace with actual embedding from embeddings API
-        embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
-        response = requests.get(embedding_request_url)
-        embedding = response.json()
+        # # TODO replace with actual embedding from embeddings API
+        # embedding_request_url = f"{app.config['EMBEDDINGS_HOST']}:{app.config['EMBEDDINGS_PORT']}/embed_image/{display_path}"
+        # response = requests.get(embedding_request_url)
+        # embedding = response.json()
 
-        # embedding = np.random.rand(384)
+        embedding = np.random.rand(384)
 
         # Write the embedding to the database
         embedding_row = add_embedding_for_sweep_session(
