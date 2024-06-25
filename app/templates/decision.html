@@ -8,62 +8,70 @@
   height:   100vh; /* Full viewport height */
 }
 
-    @import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
-        .img-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            height: 90vh;
-            padding: 0 2%;
-        }
-        .img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: transform 0.05s ease;
-            cursor: grab;
-        }
-        .img-container img.grabbing {
-            cursor: grabbing;
-        }
-        .reset-button {
-            border: none;
-            position: absolute;
-            bottom: 100px;
-            right: 50px;
-            font-family: 'Hack', monospace; /* Use the 'Hack' font */
-            font-size: 1em; /* adjust as needed */
-            padding: 2px 5px;
-            font-size: 75%;
-            /* ROunded corners */
-            border-radius: 2px;
-            background: none;
-    /* background: none;
-    border: none; */
-        }
-        .reset-button:hover {
-            background-color: #ffffff33; /* Change as needed */
-            cursor: pointer;
-        }
-        .select-button-bottom {
+@import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
+.img-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 90vh;
+    padding: 0 2%;
+}
+.img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.05s ease;
+    cursor: grab;
+}
+.img-container img.grabbing {
+    cursor: grabbing;
+}
+.reset-button {
+    color: white;
+    border: none;
+    position: absolute;
+    bottom: 100px;
+    right: 50px;
+    font-family: 'Hack', monospace; /* Use the 'Hack' font */
+    font-size: 1em; /* adjust as needed */
+    padding: 2px 5px;
+    font-size: 75%;
+    border-radius: 2px;
+    background: none;
+    background-color: #ffffff33;
+}
+.reset-button:hover {
+    background-color: #40116bde; /* Change as needed */
+    cursor: pointer;
+}
+.select-button-bottom {
     position: absolute;
     bottom: 15%; /* Adjust as needed to place it at the desired distance from the bottom */
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Adjust for the left property to truly center the button */
-    /* Add any additional styling for the button here */
     font-size: 250%;
     background: none;
     border: none;
+    border-radius: 10%;
+}
+.select-button-bottom:hover {
+    background-color: #f0f0f075; /* Change as needed */
+    cursor: pointer;
 }
 .select-button-top {
     position: absolute;
     top: 15%; /* Adjust as needed to place it at the desired distance from the bottom */
     left: 50%; /* Center horizontally */
     transform: translateX(-50%); /* Adjust for the left property to truly center the button */
-    /* Add any additional styling for the button here */
     font-size: 250%;
     background: none;
     border: none;
+    border-radius: 10%;
+
+}
+.select-button-top:hover {
+    background-color: #f0f0f075; /* Change as needed */
+    cursor: pointer;
 }
 .select-button-side {
     
@@ -73,6 +81,12 @@
     font-size: 250%;
     background: none;
     border: none;
+    border-radius: 10%;
+
+}
+.select-button-side:hover {
+    background-color: #f0f0f075; /* Change as needed */
+    cursor: pointer;
 }
 
 .left-side {
@@ -82,7 +96,7 @@
 .right-side {
     right: 0; /* Position the button on the right side */
 }
-        .img-container {
+.img-container {
     display: flex;
     justify-content: space-between;
 }
@@ -97,57 +111,71 @@
     justify-content: space-between;
 }
 
-.select-button-bottom-group {
+/* .select-button-bottom-group {
     position: absolute;
     display: flex;
     flex-direction: column;
     gap: 10px;
     z-index: 1;
     align-items: flex-start;
-}
+} */
 
-.button-group {
+/* .button-group {
     position: absolute;
     display: flex;
     flex-direction: column;
     gap: 10px;
     z-index: 1;
     align-items: flex-start;
-}
+} */
 
-.button-group:nth-of-type(1) {
+/* .button-group:nth-of-type(1) {
     left: 10px;
 }
 
 .img-wrapper:nth-child(2) .button-group {
     right: 10px;
     align-items: flex-end;
-}
+} */
 
 
 .keep-both-button {
     display: block;
-    width: 20%; /* adjust as needed */
+    width: 10%; /* adjust as needed */
     margin: 5px auto; /* centers the button horizontally */
     text-align: center;
     font-family: 'Hack', monospace; /* Use the 'Hack' font */
     font-size: 1em; /* adjust as needed */
     padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #ffffffa9;
+    border: none;
+}
+.keep-both-button:hover {
+    background-color: #f0f0f0; /* Change as needed */
+    cursor: pointer;
 }
 .drop-both-button {
     display: block;
-    width: 20%; /* adjust as needed */
+    width: 10%; /* adjust as needed */
     margin: 5px auto; /* centers the button horizontally */
     padding: 5px;
     text-align: center;
     font-family: 'Hack', monospace; /* Use the 'Hack' font */
     font-size: 1em; /* adjust as needed */
     padding: 5px 10px;
-
+    border-radius: 5px;
+    background-color: #ffffffa9;
+    border: none;
 }
+.drop-both-button:hover {
+    background-color: #f0f0f0; /* Change as needed */
+    cursor: pointer;
+}
+
 .return-overview-button {
     display: block;
-    width: 20%; /* Adjust width as needed, or remove if full width is not desired */
+    width: 10%; /* Adjust width as needed, or remove if full width is not desired */
     margin: 0 auto; /* Centers the button horizontally, adjust or remove if not needed */
     padding: 5px 10px; /* Consistent padding with other buttons */
     text-align: center;
@@ -159,6 +187,9 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
+    border-radius: 5px;
+    background-color: #ffffffa9;
+    border: none;
 }
 .return-overview-button:hover {
     background-color: #f0f0f0; /* Change as needed */
@@ -168,6 +199,14 @@
     <script>
         window.onload = function() {
             const images = document.querySelectorAll('.img-container img');
+            
+
+            // Build a dictionary of image paths
+            const imagePaths = {};
+            images.forEach(img => {
+                imagePaths[img.alt] = img.src;
+            });
+
 
             images.forEach(img => {
                 const state = {
@@ -196,10 +235,6 @@
                 selectButtonTop.classList.add('select-button-top');
                 img.parentElement.appendChild(selectButtonTop);
 
-                selectButtonTop.onclick = function() {
-                    // Print the image path to the console
-                    console.log(img.src);
-                }
 
 
                 const selectButtonSide = document.createElement('button');
@@ -211,6 +246,14 @@
                 if (position === 'Image Left') {
                     selectButtonSide.classList.add('left-side');
                     selectButtonSide.textContent = '⬅️';
+                    selectButtonTop.onclick = function() {
+                    console.log(img.src); // Or any other action
+                    console.log("Image clicked: " + img.src);
+                    console.log("Other image: " + imagePaths['Image Right']);
+                    // print both image paths
+                    console.log(images)                 
+                }
+
                 } else {
                     selectButtonSide.classList.add('right-side');
                     selectButtonSide.textContent = '➡️';
@@ -236,15 +279,13 @@
 
 
 
-                
-
+                // Zooming and panning
                 img.onwheel = function(e) {
                     e.preventDefault();
                     state.scale += e.deltaY * -0.001;
                     state.scale = Math.min(Math.max(.125, state.scale), 4);
                     img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
                 }
-
                 img.onmousedown = function(e) {
                     e.preventDefault();
                     img.classList.add('grabbing');
