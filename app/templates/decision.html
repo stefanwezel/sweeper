@@ -234,6 +234,15 @@
                 selectButtonTop.textContent = '💜';
                 selectButtonTop.classList.add('select-button-top');
                 img.parentElement.appendChild(selectButtonTop);
+                if (img.alt === 'Image Left') {
+                    selectButtonTop.onclick = function() {
+                        console.log("Image like: " + img.src);
+                    }
+                } else {
+                    selectButtonTop.onclick = function() {
+                        console.log("Image liked: " + img.src);
+                    }
+                }
 
 
 
@@ -246,36 +255,45 @@
                 if (position === 'Image Left') {
                     selectButtonSide.classList.add('left-side');
                     selectButtonSide.textContent = '⬅️';
-                    selectButtonTop.onclick = function() {
-                    console.log(img.src); // Or any other action
-                    console.log("Image clicked: " + img.src);
-                    console.log("Other image: " + imagePaths['Image Right']);
-                    // print both image paths
-                    console.log(images)                 
-                }
+                    selectButtonSide.onclick = function() {
+                        console.log(img.src); // Or any other action
+                        console.log("Image clicked: " + img.src);
+                        console.log("Other image: " + imagePaths['Image Right']);
+                        console.log(images)                 
+                    }
+
 
                 } else {
                     selectButtonSide.classList.add('right-side');
                     selectButtonSide.textContent = '➡️';
+                    selectButtonSide.onclick = function() {
+                        console.log(img.src); // Or any other action
+                        console.log("Image clicked: " + img.src);
+                        console.log("Other image: " + imagePaths['Image Left']);
+                        // print both image paths
+                        console.log(images)
+
                 }
-
+                }
                 img.parentElement.appendChild(selectButtonSide);
-
-                selectButtonSide.onclick = function() {
-                    console.log(img.src); // Or any other action
-                };
-
 
 
                 const selectButtonBottom = document.createElement('button');
                 selectButtonBottom.textContent = '🗑️';
                 selectButtonBottom.classList.add('select-button-bottom');
+
+                if (img.alt === 'Image Left') {
+                    selectButtonBottom.onclick = function() {
+                        console.log("Image dropped: " + img.src);
+                    }
+                } else {
+                    selectButtonBottom.onclick = function() {
+                        console.log("Image dropped: " + img.src);
+                    }
+                }
                 img.parentElement.appendChild(selectButtonBottom);
 
-                selectButtonBottom.onclick = function() {
-                    // Print the image path to the console
-                    console.log(img.src);
-                }
+
 
 
 
