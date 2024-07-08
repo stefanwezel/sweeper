@@ -97,6 +97,7 @@ class Embedding(db.Model):
         return f"Embedding('{self.display_path}', '{self.download_path}', '{self.sweep_session_token}', '{self.status}')"
 
 
+
 def add_user(email: str, nickname="", subscribed: bool = False) -> User:
     new_user = User(email=email, nickname=nickname, subscribed=subscribed)
     db.session.add(new_user)
@@ -461,6 +462,37 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right):
             img_path_right=img_path_right,
         )
 
+
+
+@login_required
+@app.route('/like_image', methods=['POST'])
+def like_image():
+    image_src = request.json.get('imageSrc')
+    print(f"Image liked: {image_src}")
+    # Add your logic here to handle the liked image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
+
+
+@login_required
+@app.route('/drop_image', methods=['POST'])
+def drop_image():
+    image_src = request.json.get('imageSrc')
+    print(f"Image dropped: {image_src}")
+    # Add your logic here to handle the dropped image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
+
+
+@login_required
+@app.route('/continue_from', methods=['POST'])
+def continue_from():
+    image_src = request.json.get('imageSrc')
+    other_image_src = request.json.get('otherImageSrc')
+    print(f"Continue from: {image_src}, dropping {other_image_src}")
+    # Add your logic here to continue from the selected image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
+                   
+
+# TODO remove this route (replace with like_image, drop_image, continue_from)
 @app.route(
     "/image_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
     methods=["POST"],
@@ -504,6 +536,7 @@ def image_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
         )
 
 
+# TODO remove this route (replace with like_image, drop_image, continue_from)
 @app.route(
     "/continue_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
     methods=["POST"],

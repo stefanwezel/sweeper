@@ -197,6 +197,65 @@
 }
     </style>
     <script>
+        // 💜
+        function likeImage(imageSrc) {
+            fetch('/like_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "imageSrc": imageSrc,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        // 🗑️
+        function dropImage(imageSrc) {
+            fetch('/drop_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "imageSrc": imageSrc,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        // ⬅️ (left) or ➡️ (right)
+        function continueFrom(imageSrc, otherImageSrc) {
+            fetch('/continue_from', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "imageSrc": imageSrc,
+                    "otherImageSrc": otherImageSrc,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
         window.onload = function() {
             const images = document.querySelectorAll('.img-container img');
             
@@ -204,7 +263,7 @@
             // Build a dictionary of image paths
             const imagePaths = {};
             images.forEach(img => {
-                imagePaths[img.alt] = img.src;
+                imagePaths[img.alt] = img.attributes.src.value;
             });
 
 
@@ -230,69 +289,42 @@
                     img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
                 }
 
-                const selectButtonTop = document.createElement('button');
-                selectButtonTop.textContent = '💜';
-                selectButtonTop.classList.add('select-button-top');
-                img.parentElement.appendChild(selectButtonTop);
-                if (img.alt === 'Image Left') {
-                    selectButtonTop.onclick = function() {
-                        console.log("Image like: " + img.src);
-                    }
-                } else {
-                    selectButtonTop.onclick = function() {
-                        console.log("Image liked: " + img.src);
-                    }
+                // Like button 💜
+                const selectButtonLike = document.createElement('button');
+                selectButtonLike.textContent = '💜';
+                selectButtonLike.classList.add('select-button-top');
+                img.parentElement.appendChild(selectButtonLike);
+                selectButtonLike.onclick = function() {
+                    likeImage(img.attributes.src.value);
                 }
 
-
-
-                const selectButtonSide = document.createElement('button');
-                selectButtonSide.classList.add('select-button-side');
-
-                // Example condition to check if the image is on the left or right
-                // This could be replaced with your actual logic, e.g., checking a class or data attribute
+                // Continue button ⬅️ (left) or ➡️ (right)
+                const selectButtonContiueFrom = document.createElement('button');
+                selectButtonContiueFrom.classList.add('select-button-side');
                 const position = img.alt;
                 if (position === 'Image Left') {
-                    selectButtonSide.classList.add('left-side');
-                    selectButtonSide.textContent = '⬅️';
-                    selectButtonSide.onclick = function() {
-                        console.log(img.src); // Or any other action
-                        console.log("Image clicked: " + img.src);
-                        console.log("Other image: " + imagePaths['Image Right']);
-                        console.log(images)                 
-                    }
-
-
-                } else {
-                    selectButtonSide.classList.add('right-side');
-                    selectButtonSide.textContent = '➡️';
-                    selectButtonSide.onclick = function() {
-                        console.log(img.src); // Or any other action
-                        console.log("Image clicked: " + img.src);
-                        console.log("Other image: " + imagePaths['Image Left']);
-                        // print both image paths
-                        console.log(images)
-
-                }
-                }
-                img.parentElement.appendChild(selectButtonSide);
-
-
-                const selectButtonBottom = document.createElement('button');
-                selectButtonBottom.textContent = '🗑️';
-                selectButtonBottom.classList.add('select-button-bottom');
-
-                if (img.alt === 'Image Left') {
-                    selectButtonBottom.onclick = function() {
-                        console.log("Image dropped: " + img.src);
+                    selectButtonContiueFrom.classList.add('left-side');
+                    selectButtonContiueFrom.textContent = '⬅️';
+                    selectButtonContiueFrom.onclick = function() {
+                        continueFrom(img.attributes.src.value, imagePaths['Image Right']);                 
                     }
                 } else {
-                    selectButtonBottom.onclick = function() {
-                        console.log("Image dropped: " + img.src);
+                    selectButtonContiueFrom.classList.add('right-side');
+                    selectButtonContiueFrom.textContent = '➡️';
+                    selectButtonContiueFrom.onclick = function() {
+                        continueFrom(img.attributes.src.value, imagePaths['Image Left']);
                     }
                 }
-                img.parentElement.appendChild(selectButtonBottom);
+                img.parentElement.appendChild(selectButtonContiueFrom);
 
+                // Drop button 🗑️
+                const selectButtonDrop = document.createElement('button');
+                selectButtonDrop.textContent = '🗑️';
+                selectButtonDrop.classList.add('select-button-bottom');
+                img.parentElement.appendChild(selectButtonDrop);
+                selectButtonDrop.onclick = function() {
+                    dropImage(img.attributes.src.value);
+                }
 
 
 
