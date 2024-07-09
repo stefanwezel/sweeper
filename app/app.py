@@ -379,30 +379,33 @@ def media(filename):
 @login_required
 @app.route('/like_image', methods=['POST'])
 def like_image():
-    image_src = request.json.get('imageSrc')
-    print(f"Image liked: {image_src}")
+    clicked_image_src = request.json.get('clickedImageSrc')
+    other_image_src = request.json.get('otherImageSrc')
+    print(f"Image liked: {clicked_image_src}, dropping {other_image_src}")
     
     # Add your logic here to handle the liked image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
+    return jsonify({'status': 'success', 'clickedImageSrc': clicked_image_src})
 
 
 @login_required
 @app.route('/drop_image', methods=['POST'])
 def drop_image():
-    image_src = request.json.get('imageSrc')
-    print(f"Image dropped: {image_src}")
+    clicked_image_src = request.json.get('clickedImageSrc')
+    other_image_src = request.json.get('otherImageSrc')
+    print(f"Image dropped: {clicked_image_src}, keeping {other_image_src}")
+
     # Add your logic here to handle the dropped image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
+    return jsonify({'status': 'success', 'clickedImageSrc': clicked_image_src})
 
 
 @login_required
 @app.route('/continue_from', methods=['POST'])
 def continue_from():
-    image_src = request.json.get('imageSrc')
+    clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
-    print(f"Continue from: {image_src}, dropping {other_image_src}")
+    print(f"Continue from: {clicked_image_src}, dropping {other_image_src}")
     # Add your logic here to continue from the selected image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
+    return jsonify({'status': 'success', 'clickedImageSrc': clicked_image_src})
                    
 
 
