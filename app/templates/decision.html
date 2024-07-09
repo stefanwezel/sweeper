@@ -382,38 +382,10 @@
     <button class="drop-both-button">Keep Both 💜 💜 </button>
     <div class="img-container">
         <div class="img-wrapper">
-            <div class="button-group">
-            <!-- <div > -->
-                <!-- <button class="select-button-bottom">Select (drop other)</button> -->
-                <!-- <form 
-                action="{{ url_for('continue_clicked', position='left', sweep_session_id=sweep_session_id,clicked_img_path=img_path_left, other_img_path=img_path_right) }}" method="post">
-                    <button type="submit" class="select-button-bottom"><img  alt="Select (drop other)"></button>
-                </form>
-                <form 
-                action="{{ url_for('continue_clicked', position='left', sweep_session_id=sweep_session_id,clicked_img_path=img_path_left, other_img_path=img_path_right) }}" method="post">
-                    <button type="submit" class="select-button-bottom"><img  alt="Select (keep other)"></button>
-                </form> -->
-                <!-- <button class="select-button-bottom">Select (keep other)</button> -->
-            </div>
             <img src="{{ url_for('media', filename=img_path_left) }}" alt="Image Left">
-            <!-- <button class="reset-button">Reset Zoom</button> -->
         </div>
         <div class="img-wrapper right">
             <img src="{{ url_for('media', filename=img_path_right) }}" alt="Image Right">
-            <!-- <button class="reset-button">Reset Zoom</button> -->
-            <div class="button-group">
-                <!-- <div> -->
-                    <!-- <form 
-                action="{{ url_for('continue_clicked', position='right', sweep_session_id=sweep_session_id,clicked_img_path=img_path_right, other_img_path=img_path_right) }}" method="post">
-                    <button type="submit" class="select-button-bottom"><img  alt="Select (drop other)"></button>
-                </form>
-                <form 
-                action="{{ url_for('continue_clicked', position='right', sweep_session_id=sweep_session_id,clicked_img_path=img_path_right, other_img_path=img_path_right) }}" method="post">
-                    <button type="submit" class="select-button-bottom"><img  alt="Select (keep other)"></button>
-                </form> -->
-                <!-- <button class="select-button-bottom">Select (drop other)</button> -->
-                <!-- <button class="select-button-bottom">Select (keep other)</button> -->
-            </div>
         </div>
     </div>
     <button class="keep-both-button">Drop Both 🗑️🗑️</button>
