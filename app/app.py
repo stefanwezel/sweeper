@@ -399,7 +399,7 @@ def like_image():
         sweep_session_id, clicked_img.id
     ).display_path
 
-
+    # TODO pass like so: os.path.join(sweep_session_id/token, nearest_neighbor_path/other_image_name)
     if position == "left":
         redirect_url = url_for(
             "sweep_decision",
@@ -605,6 +605,7 @@ def overview():
             .limit(3)
             .all()
         )
+        # TODO replace display_path with os.path.join(sweep_session_token, display_path)
         image_paths = [embedding.display_path for embedding in embeddings]
         sweep_session_images[sweep_session.sweep_session_token] = image_paths
         percentage = get_percentage_reviewed(sweep_session.sweep_session_token)
@@ -660,9 +661,11 @@ def embed_images(sweep_session_id):
         # We add the jpg twin for ease of processing if the image is in raw (dng) format
         if img_path.endswith(("dng", "DNG")):
             logging.info("dng detected... converting")
+            # TODO update utils, so only image name is returned
             display_path, download_path = utils.convert_dng_to_jpg(
                 os.path.join(image_dir, img_path)
             )
+        # TODO change `os.path.join(image_dir, img_path)` to `img_path`
         else:
             display_path, download_path = (
                 os.path.join(image_dir, img_path),
