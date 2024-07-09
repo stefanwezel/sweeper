@@ -381,10 +381,47 @@ def media(filename):
 def like_image():
     clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
-    print(f"Image liked: {clicked_image_src}, dropping {other_image_src}")
-    
-    # Add your logic here to handle the liked image
-    return jsonify({'status': 'success', 'clickedImageSrc': clicked_image_src})
+    # position = request.json.get('position')
+    position = "left"
+    print(f"Image liked: {clicked_image_src}")
+
+    sweep_session_id = clicked_image_src.split("/")[2]
+    # Remove "media/" from the image path
+    clicked_image_name = clicked_image_src.strip("media/")
+    other_image_name = other_image_src.strip("media/")
+
+    # # Add your logic here to handle the liked image
+    _ = update_image_status(
+            sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
+        )
+    clicked_img = get_image_by_path(sweep_session_id, clicked_image_name)
+
+    nearest_neighbor_path = get_nearest_neighbor(
+        sweep_session_id, clicked_img.id
+    ).display_path
+
+
+    if position == "left":
+        redirect_url = url_for(
+            "sweep_decision",
+            sweep_session_id=sweep_session_id,
+            img_path_left=nearest_neighbor_path,
+            img_path_right=other_image_name,
+        )
+    else:
+        redirect_url = url_for(
+            "sweep_decision",
+            sweep_session_id=sweep_session_id,
+            img_path_left=other_image_name,
+            img_path_right=nearest_neighbor_path,
+        )
+
+    # return jsonify({'status': 'success', 'redirectUrl': redirect_url})
+    return jsonify({'redirect': redirect_url})
+
+
+
+
 
 
 @login_required

@@ -197,25 +197,31 @@
 }
     </style>
     <script>
-        function updateImages(route, clickedImageSrc, otherImageSrc) {
-            fetch(route, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "clickedImageSrc": clickedImageSrc,
-                    "otherImageSrc": otherImageSrc,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        function updateImages(route, position, clickedImageSrc, otherImageSrc) {
+    fetch(route, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            "clickedImageSrc": clickedImageSrc,
+            "otherImageSrc": otherImageSrc,
+            "position": position
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.redirect) {
+            // Redirect to the URL provided by the server
+            window.location.href = data.redirect;
+        } else {
+            console.log('No redirect URL provided.');
         }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
 
 
 
@@ -258,30 +264,50 @@
                 selectButtonLike.textContent = '💜';
                 selectButtonLike.classList.add('select-button-top');
                 img.parentElement.appendChild(selectButtonLike);
-                if (position === 'Image Left') {
+                if (position === 'left') {
                     selectButtonLike.onclick = function() {
-                        updateImages("/like_image", img.attributes.src.value, imagePaths['Image Right']);
+                        updateImages(
+                            "/like_image",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['right']
+                        );
                     }
                 } else {
                     selectButtonLike.onclick = function() {
-                        updateImages("/like_image", img.attributes.src.value, imagePaths['Image Left']);
+                        updateImages(
+                            "/like_image",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['left']
+                        );
                     }
                 }
 
                 // Continue button ⬅️ (left) or ➡️ (right)
                 const selectButtonContiueFrom = document.createElement('button');
                 selectButtonContiueFrom.classList.add('select-button-side');
-                if (position === 'Image Left') {
+                if (position === 'left') {
                     selectButtonContiueFrom.classList.add('left-side');
                     selectButtonContiueFrom.textContent = '⬅️';
                     selectButtonContiueFrom.onclick = function() {
-                        updateImages("/continue_from", img.attributes.src.value, imagePaths['Image Right']);                 
+                        updateImages(
+                            "/continue_from",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['right']
+                        );                 
                     }
                 } else {
                     selectButtonContiueFrom.classList.add('right-side');
                     selectButtonContiueFrom.textContent = '➡️';
                     selectButtonContiueFrom.onclick = function() {
-                        updateImages("/continue_from", img.attributes.src.value, imagePaths['Image Left']);
+                        updateImages(
+                            "/continue_from",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['left']
+                        );
                     }
                 }
                 img.parentElement.appendChild(selectButtonContiueFrom);
@@ -291,13 +317,23 @@
                 selectButtonDrop.textContent = '🗑️';
                 selectButtonDrop.classList.add('select-button-bottom');
                 img.parentElement.appendChild(selectButtonDrop);
-                if (position === 'Image Left') {
+                if (position === 'left') {
                     selectButtonDrop.onclick = function() {
-                        updateImages("/drop_image", img.attributes.src.value, imagePaths['Image Right']);
+                        updateImages(
+                            "/drop_image",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['right']
+                        );
                     }
                 } else {
                     selectButtonDrop.onclick = function() {
-                        updateImages("/drop_image", img.attributes.src.value, imagePaths['Image Left']);
+                        updateImages(
+                            "/drop_image",
+                            position,
+                            img.attributes.src.value,
+                            imagePaths['left']
+                        );
                     }
                 }
 
@@ -354,16 +390,16 @@
     </script>
 </head>
 <body>
-    <button class="drop-both-button">Keep Both 💜 💜 </button>
+    <!-- <button class="drop-both-button">Keep Both 💜 💜 </button> -->
     <div class="img-container">
         <div class="img-wrapper">
-            <img src="{{ url_for('media', filename=img_path_left) }}" alt="Image Left">
+            <img src="{{ url_for('media', filename=img_path_left) }}" alt="left">
         </div>
         <div class="img-wrapper right">
-            <img src="{{ url_for('media', filename=img_path_right) }}" alt="Image Right">
+            <img src="{{ url_for('media', filename=img_path_right) }}" alt="right">
         </div>
     </div>
-    <button class="keep-both-button">Drop Both 🗑️🗑️</button>
+    <!-- <button class="keep-both-button">Drop Both 🗑️🗑️</button> -->
     <a href="{{ url_for('end_session') }}" class="return-overview-button" style="text-decoration: none; color: inherit;"> ⏸️ Pause session</a>
 
 </body>
