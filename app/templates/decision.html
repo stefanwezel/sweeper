@@ -197,53 +197,14 @@
 }
     </style>
     <script>
-        // 💜
-        function likeImage(imageSrc) {
-            fetch('/like_image', {
+        function updateImages(route, clickedImageSrc, otherImageSrc) {
+            fetch(route, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    "imageSrc": imageSrc,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-        // 🗑️
-        function dropImage(imageSrc) {
-            fetch('/drop_image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "imageSrc": imageSrc,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-        // ⬅️ (left) or ➡️ (right)
-        function continueFrom(imageSrc, otherImageSrc) {
-            fetch('/continue_from', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "imageSrc": imageSrc,
+                    "clickedImageSrc": clickedImageSrc,
                     "otherImageSrc": otherImageSrc,
                 }),
             })
@@ -255,6 +216,8 @@
                 console.error('Error:', error);
             });
         }
+
+
 
         window.onload = function() {
             const images = document.querySelectorAll('.img-container img');
@@ -276,6 +239,7 @@
                     lastY: 0,
                     isPanning: false,
                 };
+                const position = img.alt;
 
                 const resetButton = document.createElement('button');
                 resetButton.textContent = 'Reset Zoom';
@@ -294,25 +258,30 @@
                 selectButtonLike.textContent = '💜';
                 selectButtonLike.classList.add('select-button-top');
                 img.parentElement.appendChild(selectButtonLike);
-                selectButtonLike.onclick = function() {
-                    likeImage(img.attributes.src.value);
+                if (position === 'Image Left') {
+                    selectButtonLike.onclick = function() {
+                        updateImages("/like_image", img.attributes.src.value, imagePaths['Image Right']);
+                    }
+                } else {
+                    selectButtonLike.onclick = function() {
+                        updateImages("/like_image", img.attributes.src.value, imagePaths['Image Left']);
+                    }
                 }
 
                 // Continue button ⬅️ (left) or ➡️ (right)
                 const selectButtonContiueFrom = document.createElement('button');
                 selectButtonContiueFrom.classList.add('select-button-side');
-                const position = img.alt;
                 if (position === 'Image Left') {
                     selectButtonContiueFrom.classList.add('left-side');
                     selectButtonContiueFrom.textContent = '⬅️';
                     selectButtonContiueFrom.onclick = function() {
-                        continueFrom(img.attributes.src.value, imagePaths['Image Right']);                 
+                        updateImages("/continue_from", img.attributes.src.value, imagePaths['Image Right']);                 
                     }
                 } else {
                     selectButtonContiueFrom.classList.add('right-side');
                     selectButtonContiueFrom.textContent = '➡️';
                     selectButtonContiueFrom.onclick = function() {
-                        continueFrom(img.attributes.src.value, imagePaths['Image Left']);
+                        updateImages("/continue_from", img.attributes.src.value, imagePaths['Image Left']);
                     }
                 }
                 img.parentElement.appendChild(selectButtonContiueFrom);
@@ -322,8 +291,14 @@
                 selectButtonDrop.textContent = '🗑️';
                 selectButtonDrop.classList.add('select-button-bottom');
                 img.parentElement.appendChild(selectButtonDrop);
-                selectButtonDrop.onclick = function() {
-                    dropImage(img.attributes.src.value);
+                if (position === 'Image Left') {
+                    selectButtonDrop.onclick = function() {
+                        updateImages("/drop_image", img.attributes.src.value, imagePaths['Image Right']);
+                    }
+                } else {
+                    selectButtonDrop.onclick = function() {
+                        updateImages("/drop_image", img.attributes.src.value, imagePaths['Image Left']);
+                    }
                 }
 
 
