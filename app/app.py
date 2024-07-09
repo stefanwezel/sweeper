@@ -375,51 +375,39 @@ def media(filename):
     return send_from_directory(media_folder, filename)
 
 
-@app.route(
-    "/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>"
-)
-# @login_required
-# def sweep_decision(sweep_session_id, img_path_left, img_path_right):
-#     if img_path_left == "initial":
-#         starting_image = get_starting_image(sweep_session_id)
-#         if starting_image:
-#             nearest_neighbor = get_nearest_neighbor(sweep_session_id, starting_image.id)
-#             return render_template(
-#                 "sweep_session.html",
-#                 sweep_session_id=sweep_session_id,
-#                 img_path_left=starting_image.display_path,
-#                 img_path_right=nearest_neighbor.display_path,
-#             )
-#         else:
-#             return render_template(
-#                 "sweep_session.html",
-#                 sweep_session_id=sweep_session_id,
-#                 img_path_left="endofline.jpg",
-#                 img_path_right="endofline.jpg",
-#             )
 
-#     elif img_path_left == "endofline":
-#         return render_template(
-#             "sweep_session.html",
-#             sweep_session_id=sweep_session_id,
-#             img_path_left="endofline.jpg",
-#             img_path_right=sweep_session_id,
-#         )
-#     elif img_path_right == "endofline":
-#         return render_template(
-#             "sweep_session.html",
-#             sweep_session_id=sweep_session_id,
-#             img_path_left=sweep_session_id,
-#             img_path_right="endofline.jpg",
-#         )
+@login_required
+@app.route('/like_image', methods=['POST'])
+def like_image():
+    image_src = request.json.get('imageSrc')
+    print(f"Image liked: {image_src}")
+    
+    # Add your logic here to handle the liked image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
 
-#     else:
-#         return render_template(
-#             "sweep_session.html",
-#             sweep_session_id=sweep_session_id,
-#             img_path_left=img_path_left,
-#             img_path_right=img_path_right,
-#         )
+
+@login_required
+@app.route('/drop_image', methods=['POST'])
+def drop_image():
+    image_src = request.json.get('imageSrc')
+    print(f"Image dropped: {image_src}")
+    # Add your logic here to handle the dropped image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
+
+
+@login_required
+@app.route('/continue_from', methods=['POST'])
+def continue_from():
+    image_src = request.json.get('imageSrc')
+    other_image_src = request.json.get('otherImageSrc')
+    print(f"Continue from: {image_src}, dropping {other_image_src}")
+    # Add your logic here to continue from the selected image
+    return jsonify({'status': 'success', 'imageSrc': image_src})
+                   
+
+
+@login_required
+@app.route("/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>")
 def sweep_decision(sweep_session_id, img_path_left, img_path_right):
     if img_path_left == "initial":
         starting_image = get_starting_image(sweep_session_id)
@@ -464,111 +452,84 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right):
 
 
 
-@login_required
-@app.route('/like_image', methods=['POST'])
-def like_image():
-    image_src = request.json.get('imageSrc')
-    print(f"Image liked: {image_src}")
-    # Add your logic here to handle the liked image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
+# # TODO remove this route (replace with like_image, drop_image, continue_from)
+# @app.route(
+#     "/image_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
+#     methods=["POST"],
+# )
+# @login_required
+# def image_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
+#     if clicked_img_path.split("/")[-1] == "endofline.jpg":
+#         _ = update_image_status(
+#             sweep_session_id, other_img_path, set_status_to="reviewed_keep"
+#         )
+#         return redirect(url_for("overview"))
 
+#     _ = update_image_status(
+#         sweep_session_id, other_img_path, set_status_to="reviewed_discard"
+#     )
+#     try:
+#         clicked_img = get_image_by_path(sweep_session_id, clicked_img_path)
+#         nearest_neighbor_path = get_nearest_neighbor(
+#             sweep_session_id, clicked_img.id
+#         ).display_path
 
-@login_required
-@app.route('/drop_image', methods=['POST'])
-def drop_image():
-    image_src = request.json.get('imageSrc')
-    print(f"Image dropped: {image_src}")
-    # Add your logic here to handle the dropped image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
-
-
-@login_required
-@app.route('/continue_from', methods=['POST'])
-def continue_from():
-    image_src = request.json.get('imageSrc')
-    other_image_src = request.json.get('otherImageSrc')
-    print(f"Continue from: {image_src}, dropping {other_image_src}")
-    # Add your logic here to continue from the selected image
-    return jsonify({'status': 'success', 'imageSrc': image_src})
-                   
-
-# TODO remove this route (replace with like_image, drop_image, continue_from)
-@app.route(
-    "/image_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
-    methods=["POST"],
-)
-@login_required
-def image_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
-    if clicked_img_path.split("/")[-1] == "endofline.jpg":
-        _ = update_image_status(
-            sweep_session_id, other_img_path, set_status_to="reviewed_keep"
-        )
-        return redirect(url_for("overview"))
-
-    _ = update_image_status(
-        sweep_session_id, other_img_path, set_status_to="reviewed_discard"
-    )
-    try:
-        clicked_img = get_image_by_path(sweep_session_id, clicked_img_path)
-        nearest_neighbor_path = get_nearest_neighbor(
-            sweep_session_id, clicked_img.id
-        ).display_path
-
-    except UnboundLocalError:
-        nearest_neighbor_path = clicked_img_path
-    if position == "left":
-        return redirect(
-            url_for(
-                "sweep_decision",
-                sweep_session_id=sweep_session_id,
-                img_path_left=clicked_img_path,
-                img_path_right=nearest_neighbor_path,
-            )
-        )
-    else:
-        return redirect(
-            url_for(
-                "sweep_decision",
-                sweep_session_id=sweep_session_id,
-                img_path_left=nearest_neighbor_path,
-                img_path_right=clicked_img_path,
-            )
-        )
+#     except UnboundLocalError:
+#         nearest_neighbor_path = clicked_img_path
+#     if position == "left":
+#         return redirect(
+#             url_for(
+#                 "sweep_decision",
+#                 sweep_session_id=sweep_session_id,
+#                 img_path_left=clicked_img_path,
+#                 img_path_right=nearest_neighbor_path,
+#             )
+#         )
+#     else:
+#         return redirect(
+#             url_for(
+#                 "sweep_decision",
+#                 sweep_session_id=sweep_session_id,
+#                 img_path_left=nearest_neighbor_path,
+#                 img_path_right=clicked_img_path,
+#             )
+#         )
 
 
 # TODO remove this route (replace with like_image, drop_image, continue_from)
-@app.route(
-    "/continue_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
-    methods=["POST"],
-)
-@login_required
-def continue_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
-    _ = update_image_status(
-        sweep_session_id, other_img_path, set_status_to="reviewed_keep"
-    )
-    clicked_img = get_image_by_path(sweep_session_id, clicked_img_path)
-    nearest_neighbor_path = get_nearest_neighbor(
-        sweep_session_id, clicked_img.id
-    ).display_path
+# @app.route(
+#     "/continue_clicked/<string:position>/<string:sweep_session_id>/clicked/<path:clicked_img_path>/other/<path:other_img_path>",
+#     methods=["POST"],
+# )
+# @login_required
+# def continue_clicked(position, sweep_session_id, clicked_img_path, other_img_path):
+#     ...
+    # _ = update_image_status(
+    #     sweep_session_id, other_img_path, set_status_to="reviewed_keep"
+    # )
+    # clicked_img = get_image_by_path(sweep_session_id, clicked_img_path)
+    # nearest_neighbor_path = get_nearest_neighbor(
+    #     sweep_session_id, clicked_img.id
+    # ).display_path
 
-    if position == "left":
-        return redirect(
-            url_for(
-                "sweep_decision",
-                sweep_session_id=sweep_session_id,
-                img_path_left=clicked_img_path,
-                img_path_right=nearest_neighbor_path,
-            )
-        )
-    else:
-        return redirect(
-            url_for(
-                "sweep_decision",
-                sweep_session_id=sweep_session_id,
-                img_path_left=nearest_neighbor_path,
-                img_path_right=clicked_img_path,
-            )
-        )
+    # if position == "left":
+    #     return redirect(
+    #         url_for(
+    #             "sweep_decision",
+    #             sweep_session_id=sweep_session_id,
+    #             img_path_left=clicked_img_path,
+    #             img_path_right=nearest_neighbor_path,
+    #         )
+    #     )
+    # else:
+    #     return redirect(
+    #         url_for(
+    #             "sweep_decision",
+    #             sweep_session_id=sweep_session_id,
+    #             img_path_left=nearest_neighbor_path,
+    #             img_path_right=clicked_img_path,
+    #         )
+    #     )
 
 
 @app.route("/select_seed_image", methods=["GET"])
