@@ -376,21 +376,20 @@ def media(filename):
 
 
 
+# TODO do this more elegantly
 @login_required
 @app.route('/like_image', methods=['POST'])
 def like_image():
     clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
-    # position = request.json.get('position')
-    position = "left"
+    position = request.json.get('position')
     print(f"Image liked: {clicked_image_src}")
 
     sweep_session_id = clicked_image_src.split("/")[2]
-    # Remove "media/" from the image path
+    # Remove "media/" from the image paths
     clicked_image_name = clicked_image_src.strip("media/")
     other_image_name = other_image_src.strip("media/")
 
-    # # Add your logic here to handle the liked image
     _ = update_image_status(
             sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
         )
@@ -416,7 +415,6 @@ def like_image():
             img_path_right=nearest_neighbor_path,
         )
 
-    # return jsonify({'status': 'success', 'redirectUrl': redirect_url})
     return jsonify({'redirect': redirect_url})
 
 
