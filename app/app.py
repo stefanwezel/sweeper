@@ -97,7 +97,6 @@ class Embedding(db.Model):
         return f"Embedding('{self.display_path}', '{self.download_path}', '{self.sweep_session_token}', '{self.status}')"
 
 
-
 def add_user(email: str, nickname="", subscribed: bool = False) -> User:
     new_user = User(email=email, nickname=nickname, subscribed=subscribed)
     db.session.add(new_user)
@@ -201,7 +200,7 @@ def get_starting_image(sweep_session_id: str) -> Optional[Embedding]:
 
 
 def get_nearest_neighbor(sweep_session_id: str, query_image_id: int) -> Embedding:
-    """ Get the nearest neighbor to the query image. """
+    """Get the nearest neighbor to the query image."""
     query_embedding = Embedding.query.get(query_image_id)
     nns = (
         db.session.query(Embedding)
@@ -220,7 +219,7 @@ def update_image_status(
     update_image_path: str,
     set_status_to: str = "reviewed_discard",
 ) -> str:
-    """ Update the status of an image in the database. """
+    """Update the status of an image in the database."""
     image = Embedding.query.filter_by(
         sweep_session_token=sweep_session_id, display_path=update_image_path
     ).first()
@@ -234,31 +233,33 @@ def update_image_status(
     return True
 
 
-
-def build_decision_page(position: str, sweep_session_id: str, other_image_name: str, nearest_neighbor_path: str) -> str:
+def redirect_to_decision(
+    position: str,
+    sweep_session_id: str,
+    other_image_name: str,
+    nearest_neighbor_path: str,
+) -> str:
     if position == "left":
         redirect_url: str = url_for(
-            "sweep_decision",
+            "render_decision",
             sweep_session_id=sweep_session_id,
             img_path_left=nearest_neighbor_path,
             img_path_right=other_image_name,
         )
     else:
         redirect_url: str = url_for(
-            "sweep_decision",
+            "render_decision",
             sweep_session_id=sweep_session_id,
             img_path_left=other_image_name,
             img_path_right=nearest_neighbor_path,
         )
-        
+
     return redirect_url
 
 
 def get_percentage_reviewed(sweep_session_id: str) -> int:
     count_all = len(
-        Embedding.query.filter(
-            Embedding.sweep_session_token == sweep_session_id
-        ).all()
+        Embedding.query.filter(Embedding.sweep_session_token == sweep_session_id).all()
     )
     count_reviewed = len(
         Embedding.query.filter(
@@ -318,7 +319,9 @@ oauth.register(
     "auth0",
     client_id=os.getenv("AUTH0_CLIENT_ID"),
     client_secret=os.getenv("AUTH0_CLIENT_SECRET"),
-    client_kwargs={"scope": "openid profile email",},
+    client_kwargs={
+        "scope": "openid profile email",
+    },
     server_metadata_url=f'https://{os.getenv("AUTH0_DOMAIN")}/.well-known/openid-configuration',
 )
 login_manager.init_app(app)
@@ -395,97 +398,103 @@ def media(filename):
     return send_from_directory(media_folder, filename)
 
 
-
 # TODO do this more elegantly
 @login_required
-@app.route('/like_image', methods=['POST'])
+@app.route("/like_image", methods=["POST"])
 def like_image():
-    clicked_image_src = request.json.get('clickedImageSrc')
-    other_image_src = request.json.get('otherImageSrc')
-    position = request.json.get('position')
-    sweep_session_id = request.json.get('sweep_session_id')
+    clicked_image_src = request.json.get("clickedImageSrc")
+    other_image_src = request.json.get("otherImageSrc")
+    position = request.json.get("position")
+    sweep_session_id = request.json.get("sweep_session_id")
     print(f"Image liked: {clicked_image_src}")
 
-
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
-    other_image_name = other_image_src.replace('/media/', '', 1) 
+    clicked_image_name = clicked_image_src.replace("/media/", "", 1)
+    other_image_name = other_image_src.replace("/media/", "", 1)
 
     _ = update_image_status(
-            sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
-        )
+        sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
+    )
     clicked_img = get_image_by_path(sweep_session_id, clicked_image_name)
 
-    nearest_neighbor_path = get_nearest_neighbor(sweep_session_id, clicked_img.id).display_path
+    nearest_neighbor_path = get_nearest_neighbor(
+        sweep_session_id, clicked_img.id
+    ).display_path
 
-    redirect_url = build_decision_page(position, sweep_session_id, other_image_name, nearest_neighbor_path)
+    redirect_url = redirect_to_decision(
+        position, sweep_session_id, other_image_name, nearest_neighbor_path
+    )
 
-    return jsonify({'redirect': redirect_url})
-
-
-
-
-
-
+    return jsonify({"redirect": redirect_url})
 
 
 @login_required
-@app.route('/drop_image', methods=['POST'])
+@app.route("/drop_image", methods=["POST"])
 def drop_image():
-    clicked_image_src = request.json.get('clickedImageSrc')
-    other_image_src = request.json.get('otherImageSrc')
-    position = request.json.get('position')
-    sweep_session_id = request.json.get('sweep_session_id')
+    clicked_image_src = request.json.get("clickedImageSrc")
+    other_image_src = request.json.get("otherImageSrc")
+    position = request.json.get("position")
+    sweep_session_id = request.json.get("sweep_session_id")
     print(f"Image dropped: {clicked_image_src}")
 
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
-    other_image_name = other_image_src.replace('/media/', '', 1) 
+    clicked_image_name = clicked_image_src.replace("/media/", "", 1)
+    other_image_name = other_image_src.replace("/media/", "", 1)
 
     _ = update_image_status(
-            sweep_session_id, clicked_image_name, set_status_to="reviewed_discard"
-        )
+        sweep_session_id, clicked_image_name, set_status_to="reviewed_discard"
+    )
     clicked_img = get_image_by_path(sweep_session_id, clicked_image_name)
 
-    nearest_neighbor_path = get_nearest_neighbor(sweep_session_id, clicked_img.id).display_path
+    nearest_neighbor_path = get_nearest_neighbor(
+        sweep_session_id, clicked_img.id
+    ).display_path
 
-    redirect_url = build_decision_page(position, sweep_session_id, other_image_name, nearest_neighbor_path)
+    redirect_url = redirect_to_decision(
+        position, sweep_session_id, other_image_name, nearest_neighbor_path
+    )
 
-    return jsonify({'redirect': redirect_url})
+    return jsonify({"redirect": redirect_url})
 
 
 @login_required
-@app.route('/continue_from', methods=['POST'])
+@app.route("/continue_from", methods=["POST"])
 def continue_from():
-    clicked_image_src = request.json.get('clickedImageSrc')
-    other_image_src = request.json.get('otherImageSrc')
-    position = request.json.get('position')
-    sweep_session_id = request.json.get('sweep_session_id')
+    clicked_image_src = request.json.get("clickedImageSrc")
+    other_image_src = request.json.get("otherImageSrc")
+    position = request.json.get("position")
+    sweep_session_id = request.json.get("sweep_session_id")
     print(f"Image dropped: {clicked_image_src}")
 
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
-    other_image_name = other_image_src.replace('/media/', '', 1) 
+    clicked_image_name = clicked_image_src.replace("/media/", "", 1)
+    other_image_name = other_image_src.replace("/media/", "", 1)
 
     _ = update_image_status(
-            sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
-        )
+        sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
+    )
     _ = update_image_status(
-            sweep_session_id, other_image_name, set_status_to="reviewed_discard"
-        )
+        sweep_session_id, other_image_name, set_status_to="reviewed_discard"
+    )
     clicked_img = get_image_by_path(sweep_session_id, clicked_image_name)
 
-    nearest_neighbor_path = get_nearest_neighbor(sweep_session_id, clicked_img.id).display_path
+    nearest_neighbor_path = get_nearest_neighbor(
+        sweep_session_id, clicked_img.id
+    ).display_path
 
-    redirect_url = build_decision_page(position, sweep_session_id, nearest_neighbor_path, clicked_image_name)
+    redirect_url = redirect_to_decision(
+        position, sweep_session_id, nearest_neighbor_path, clicked_image_name
+    )
 
-    return jsonify({'redirect': redirect_url})
-                   
+    return jsonify({"redirect": redirect_url})
 
 
+# TODO get rid of img_paths in url
 @login_required
-@app.route("/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>")
-def sweep_decision(sweep_session_id, img_path_left, img_path_right):
+@app.route(
+    "/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>"
+)
+def render_decision(sweep_session_id, img_path_left, img_path_right):
     if img_path_left == "initial":
         starting_image = get_starting_image(sweep_session_id)
         if starting_image:
@@ -531,7 +540,7 @@ def sweep_decision(sweep_session_id, img_path_left, img_path_right):
 @app.route("/select_seed_image", methods=["GET"])
 def select_seed_image():
     logging.info("Button clicked - selecting new seed image...")
-    return redirect(url_for("sweep_decision"))
+    return redirect(url_for("render_decision"))
 
 
 @app.route("/end_session", methods=["GET"])
@@ -566,9 +575,9 @@ def overview():
         image_paths = [embedding.display_path for embedding in embeddings]
         sweep_session_images[sweep_session.sweep_session_token] = image_paths
         percentage = get_percentage_reviewed(sweep_session.sweep_session_token)
-        sweep_session_progress_percentage[
-            sweep_session.sweep_session_token
-        ] = percentage
+        sweep_session_progress_percentage[sweep_session.sweep_session_token] = (
+            percentage
+        )
 
     return render_template(
         "overview.html",
@@ -664,7 +673,8 @@ def uploaded_file(filename):
 @app.route("/download/<string:sweep_session_id>", methods=["GET"])
 def download_subset(sweep_session_id):
     file_client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=sweep_session_id,
+        media_folder=app.config["MEDIA_FOLDER"],
+        sweep_session_id=sweep_session_id,
     )
     # TODO make this part of the FileClient class
     upload_dir = file_client.upload_dir
@@ -689,7 +699,8 @@ def init_new_sweep_session():
     new_hash = uuid.uuid4().hex
 
     client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=new_hash,
+        media_folder=app.config["MEDIA_FOLDER"],
+        sweep_session_id=new_hash,
     )
     client.create_dir()
 
@@ -698,7 +709,7 @@ def init_new_sweep_session():
 
 @app.route("/drop_sweep_session/<string:sweep_session_id>")
 def drop_sweep_session(sweep_session_id):
-    """ Remove a session and all its contents from the database and the media directory."""
+    """Remove a session and all its contents from the database and the media directory."""
     success = remove_session_for_user(
         session.get("user")["userinfo"]["name"], sweep_session_id
     )
@@ -712,7 +723,8 @@ def drop_sweep_session(sweep_session_id):
         )
 
     client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=sweep_session_id,
+        media_folder=app.config["MEDIA_FOLDER"],
+        sweep_session_id=sweep_session_id,
     )
     client.remove_directory()
 
