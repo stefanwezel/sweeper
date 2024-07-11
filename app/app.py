@@ -407,8 +407,8 @@ def like_image():
 
     sweep_session_id = clicked_image_src.split("/")[2]
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.strip(app.config['MEDIA_FOLDER'])
-    other_image_name = other_image_src.strip(app.config['MEDIA_FOLDER'])
+    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
+    other_image_name = other_image_src.replace('/media/', '', 1) 
 
     _ = update_image_status(
             sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
@@ -438,8 +438,8 @@ def drop_image():
 
     sweep_session_id = clicked_image_src.split("/")[2]
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.strip(app.config['MEDIA_FOLDER'])
-    other_image_name = other_image_src.strip(app.config['MEDIA_FOLDER'])
+    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
+    other_image_name = other_image_src.replace('/media/', '', 1) 
 
     _ = update_image_status(
             sweep_session_id, clicked_image_name, set_status_to="reviewed_discard"
@@ -463,8 +463,8 @@ def continue_from():
 
     sweep_session_id = clicked_image_src.split("/")[2]
     # Remove "media/" from the image paths
-    clicked_image_name = clicked_image_src.strip(app.config['MEDIA_FOLDER'])
-    other_image_name = other_image_src.strip(app.config['MEDIA_FOLDER'])
+    clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
+    other_image_name = other_image_src.replace('/media/', '', 1) 
 
     _ = update_image_status(
             sweep_session_id, clicked_image_name, set_status_to="reviewed_keep"
