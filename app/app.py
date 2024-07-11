@@ -403,9 +403,10 @@ def like_image():
     clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
     position = request.json.get('position')
+    sweep_session_id = request.json.get('sweep_session_id')
     print(f"Image liked: {clicked_image_src}")
 
-    sweep_session_id = clicked_image_src.split("/")[2]
+
     # Remove "media/" from the image paths
     clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
     other_image_name = other_image_src.replace('/media/', '', 1) 
@@ -434,9 +435,9 @@ def drop_image():
     clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
     position = request.json.get('position')
+    sweep_session_id = request.json.get('sweep_session_id')
     print(f"Image dropped: {clicked_image_src}")
 
-    sweep_session_id = clicked_image_src.split("/")[2]
     # Remove "media/" from the image paths
     clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
     other_image_name = other_image_src.replace('/media/', '', 1) 
@@ -459,9 +460,9 @@ def continue_from():
     clicked_image_src = request.json.get('clickedImageSrc')
     other_image_src = request.json.get('otherImageSrc')
     position = request.json.get('position')
+    sweep_session_id = request.json.get('sweep_session_id')
     print(f"Image dropped: {clicked_image_src}")
 
-    sweep_session_id = clicked_image_src.split("/")[2]
     # Remove "media/" from the image paths
     clicked_image_name = clicked_image_src.replace('/media/', '', 1) 
     other_image_name = other_image_src.replace('/media/', '', 1) 
