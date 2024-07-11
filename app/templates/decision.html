@@ -1,233 +1,257 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
         body {
-  background: linear-gradient(to bottom, #22052d, #ccb3d1);
-  margin:   0; /* Remove default margins */
-  height:   100vh; /* Full viewport height */
-}
+            background: linear-gradient(to bottom, #22052d, #ccb3d1);
+            margin: 0;
+            /* Remove default margins */
+            height: 100vh;
+            /* Full viewport height */
+        }
 
-@import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
-.img-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: 90vh;
-    padding: 0 2%;
-}
-.img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: transform 0.05s ease;
-    cursor: grab;
-}
-.img-container img.grabbing {
-    cursor: grabbing;
-}
-.reset-button {
-    color: white;
-    border: none;
-    position: absolute;
-    bottom: 100px;
-    right: 50px;
-    font-family: 'Hack', monospace; /* Use the 'Hack' font */
-    font-size: 1em; /* adjust as needed */
-    padding: 2px 5px;
-    font-size: 75%;
-    border-radius: 2px;
-    background: none;
-    background-color: #ffffff33;
-}
-.reset-button:hover {
-    background-color: #40116bde; /* Change as needed */
-    cursor: pointer;
-}
-.select-button-bottom {
-    position: absolute;
-    bottom: 15%; /* Adjust as needed to place it at the desired distance from the bottom */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for the left property to truly center the button */
-    font-size: 250%;
-    background: none;
-    border: none;
-    border-radius: 10%;
-}
-.select-button-bottom:hover {
-    background-color: #f0f0f075; /* Change as needed */
-    cursor: pointer;
-}
-.select-button-top {
-    position: absolute;
-    top: 15%; /* Adjust as needed to place it at the desired distance from the bottom */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for the left property to truly center the button */
-    font-size: 250%;
-    background: none;
-    border: none;
-    border-radius: 10%;
+        @import url('https://fonts.googleapis.com/css2?family=Hack&display=swap');
 
-}
-.select-button-top:hover {
-    background-color: #f0f0f075; /* Change as needed */
-    cursor: pointer;
-}
-.select-button-side {
-    
-    position: absolute;
-    top: 50%; /* Center vertically */
-    transform: translateY(-50%); /* Adjust for the top property to truly center the button vertically */
-    font-size: 250%;
-    background: none;
-    border: none;
-    border-radius: 10%;
+        .img-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 90vh;
+            padding: 0 2%;
+        }
 
-}
-.select-button-side:hover {
-    background-color: #f0f0f075; /* Change as needed */
-    cursor: pointer;
-}
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.05s ease;
+            cursor: grab;
+        }
 
-.left-side {
-    left: 0; /* Position the button on the left side */
-}
+        .img-container img.grabbing {
+            cursor: grabbing;
+        }
 
-.right-side {
-    right: 0; /* Position the button on the right side */
-}
-.img-container {
-    display: flex;
-    justify-content: space-between;
-}
-.img-wrapper {
-    position: relative;
-    width: 48%;
-    height: 95vh;
-    max-height: 75vh;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+        .reset-button {
+            color: white;
+            border: none;
+            position: absolute;
+            bottom: 100px;
+            right: 50px;
+            font-family: 'Hack', monospace;
+            /* Use the 'Hack' font */
+            font-size: 1em;
+            /* adjust as needed */
+            padding: 2px 5px;
+            font-size: 75%;
+            border-radius: 2px;
+            background: none;
+            background-color: #ffffff33;
+        }
 
-/* .select-button-bottom-group {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 1;
-    align-items: flex-start;
-} */
+        .reset-button:hover {
+            background-color: #40116bde;
+            /* Change as needed */
+            cursor: pointer;
+        }
 
-/* .button-group {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 1;
-    align-items: flex-start;
-} */
+        .select-button-bottom {
+            position: absolute;
+            bottom: 15%;
+            /* Adjust as needed to place it at the desired distance from the bottom */
+            left: 50%;
+            /* Center horizontally */
+            transform: translateX(-50%);
+            /* Adjust for the left property to truly center the button */
+            font-size: 250%;
+            background: none;
+            border: none;
+            border-radius: 10%;
+        }
 
-/* .button-group:nth-of-type(1) {
-    left: 10px;
-}
+        .select-button-bottom:hover {
+            background-color: #f0f0f075;
+            /* Change as needed */
+            cursor: pointer;
+        }
 
-.img-wrapper:nth-child(2) .button-group {
-    right: 10px;
-    align-items: flex-end;
-} */
+        .select-button-top {
+            position: absolute;
+            top: 15%;
+            /* Adjust as needed to place it at the desired distance from the bottom */
+            left: 50%;
+            /* Center horizontally */
+            transform: translateX(-50%);
+            /* Adjust for the left property to truly center the button */
+            font-size: 250%;
+            background: none;
+            border: none;
+            border-radius: 10%;
 
+        }
 
-.keep-both-button {
-    display: block;
-    width: 10%; /* adjust as needed */
-    margin: 5px auto; /* centers the button horizontally */
-    text-align: center;
-    font-family: 'Hack', monospace; /* Use the 'Hack' font */
-    font-size: 1em; /* adjust as needed */
-    padding: 5px 10px;
-    border-radius: 5px;
-    background-color: #ffffffa9;
-    border: none;
-}
-.keep-both-button:hover {
-    background-color: #f0f0f0; /* Change as needed */
-    cursor: pointer;
-}
-.drop-both-button {
-    display: block;
-    width: 10%; /* adjust as needed */
-    margin: 5px auto; /* centers the button horizontally */
-    padding: 5px;
-    text-align: center;
-    font-family: 'Hack', monospace; /* Use the 'Hack' font */
-    font-size: 1em; /* adjust as needed */
-    padding: 5px 10px;
-    border-radius: 5px;
-    background-color: #ffffffa9;
-    border: none;
-}
-.drop-both-button:hover {
-    background-color: #f0f0f0; /* Change as needed */
-    cursor: pointer;
-}
+        .select-button-top:hover {
+            background-color: #f0f0f075;
+            /* Change as needed */
+            cursor: pointer;
+        }
 
-.return-overview-button {
-    display: block;
-    width: 10%; /* Adjust width as needed, or remove if full width is not desired */
-    margin: 0 auto; /* Centers the button horizontally, adjust or remove if not needed */
-    padding: 5px 10px; /* Consistent padding with other buttons */
-    text-align: center;
-    font-family: 'Hack', monospace; /* Use the 'Hack' font */
-    font-size: 1em; /* Adjust font size as needed */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    border-radius: 5px;
-    background-color: #ffffffa9;
-    border: none;
-}
-.return-overview-button:hover {
-    background-color: #f0f0f0; /* Change as needed */
-    cursor: pointer;
-}
+        .select-button-side {
+
+            position: absolute;
+            top: 50%;
+            /* Center vertically */
+            transform: translateY(-50%);
+            /* Adjust for the top property to truly center the button vertically */
+            font-size: 250%;
+            background: none;
+            border: none;
+            border-radius: 10%;
+
+        }
+
+        .select-button-side:hover {
+            background-color: #f0f0f075;
+            /* Change as needed */
+            cursor: pointer;
+        }
+
+        .left-side {
+            left: 0;
+            /* Position the button on the left side */
+        }
+
+        .right-side {
+            right: 0;
+            /* Position the button on the right side */
+        }
+
+        .img-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .img-wrapper {
+            position: relative;
+            width: 48%;
+            height: 95vh;
+            max-height: 75vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .keep-both-button {
+            display: block;
+            width: 10%;
+            /* adjust as needed */
+            margin: 5px auto;
+            /* centers the button horizontally */
+            text-align: center;
+            font-family: 'Hack', monospace;
+            /* Use the 'Hack' font */
+            font-size: 1em;
+            /* adjust as needed */
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #ffffffa9;
+            border: none;
+        }
+
+        .keep-both-button:hover {
+            background-color: #f0f0f0;
+            /* Change as needed */
+            cursor: pointer;
+        }
+
+        .drop-both-button {
+            display: block;
+            width: 10%;
+            /* adjust as needed */
+            margin: 5px auto;
+            /* centers the button horizontally */
+            padding: 5px;
+            text-align: center;
+            font-family: 'Hack', monospace;
+            /* Use the 'Hack' font */
+            font-size: 1em;
+            /* adjust as needed */
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #ffffffa9;
+            border: none;
+        }
+
+        .drop-both-button:hover {
+            background-color: #f0f0f0;
+            /* Change as needed */
+            cursor: pointer;
+        }
+
+        .return-overview-button {
+            display: block;
+            width: 10%;
+            /* Adjust width as needed, or remove if full width is not desired */
+            margin: 0 auto;
+            /* Centers the button horizontally, adjust or remove if not needed */
+            padding: 5px 10px;
+            /* Consistent padding with other buttons */
+            text-align: center;
+            font-family: 'Hack', monospace;
+            /* Use the 'Hack' font */
+            font-size: 1em;
+            /* Adjust font size as needed */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 5px;
+            background-color: #ffffffa9;
+            border: none;
+        }
+
+        .return-overview-button:hover {
+            background-color: #f0f0f0;
+            /* Change as needed */
+            cursor: pointer;
+        }
     </style>
     <script>
         function updateImages(route, position, clickedImageSrc, otherImageSrc) {
-    fetch(route, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "clickedImageSrc": clickedImageSrc,
-            "otherImageSrc": otherImageSrc,
-            "position": position
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.redirect) {
-            // Redirect to the URL provided by the server
-            window.location.href = data.redirect;
-        } else {
-            console.log('No redirect URL provided.');
+            fetch(route, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "clickedImageSrc": clickedImageSrc,
+                    "otherImageSrc": otherImageSrc,
+                    "position": position,
+                    "sweep_session_id": "{{ sweep_session_id }}"
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.redirect) {
+                        // Redirect to the URL provided by the server
+                        window.location.href = data.redirect;
+                    } else {
+                        console.log('No redirect URL provided.');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
         }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-    });
-}
 
 
 
-        window.onload = function() {
+        window.onload = function () {
             const images = document.querySelectorAll('.img-container img');
-            
+
 
             // Build a dictionary of image paths
             const imagePaths = {};
@@ -252,7 +276,7 @@
                 resetButton.classList.add('reset-button');
                 img.parentElement.appendChild(resetButton);
 
-                resetButton.onclick = function() {
+                resetButton.onclick = function () {
                     state.scale = 1;
                     state.panX = 0;
                     state.panY = 0;
@@ -265,7 +289,7 @@
                 selectButtonLike.classList.add('select-button-top');
                 img.parentElement.appendChild(selectButtonLike);
                 if (position === 'left') {
-                    selectButtonLike.onclick = function() {
+                    selectButtonLike.onclick = function () {
                         updateImages(
                             "/like_image",
                             position,
@@ -274,7 +298,7 @@
                         );
                     }
                 } else {
-                    selectButtonLike.onclick = function() {
+                    selectButtonLike.onclick = function () {
                         updateImages(
                             "/like_image",
                             position,
@@ -290,18 +314,18 @@
                 if (position === 'left') {
                     selectButtonContiueFrom.classList.add('left-side');
                     selectButtonContiueFrom.textContent = '⬅️';
-                    selectButtonContiueFrom.onclick = function() {
+                    selectButtonContiueFrom.onclick = function () {
                         updateImages(
                             "/continue_from",
                             position,
                             img.attributes.src.value,
                             imagePaths['right']
-                        );                 
+                        );
                     }
                 } else {
                     selectButtonContiueFrom.classList.add('right-side');
                     selectButtonContiueFrom.textContent = '➡️';
-                    selectButtonContiueFrom.onclick = function() {
+                    selectButtonContiueFrom.onclick = function () {
                         updateImages(
                             "/continue_from",
                             position,
@@ -318,7 +342,7 @@
                 selectButtonDrop.classList.add('select-button-bottom');
                 img.parentElement.appendChild(selectButtonDrop);
                 if (position === 'left') {
-                    selectButtonDrop.onclick = function() {
+                    selectButtonDrop.onclick = function () {
                         updateImages(
                             "/drop_image",
                             position,
@@ -327,7 +351,7 @@
                         );
                     }
                 } else {
-                    selectButtonDrop.onclick = function() {
+                    selectButtonDrop.onclick = function () {
                         updateImages(
                             "/drop_image",
                             position,
@@ -341,13 +365,13 @@
 
 
                 // Zooming and panning
-                img.onwheel = function(e) {
+                img.onwheel = function (e) {
                     e.preventDefault();
                     state.scale += e.deltaY * -0.001;
                     state.scale = Math.min(Math.max(.125, state.scale), 4);
                     img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
                 }
-                img.onmousedown = function(e) {
+                img.onmousedown = function (e) {
                     e.preventDefault();
                     img.classList.add('grabbing');
                     state.lastX = e.clientX - state.panX;
@@ -355,33 +379,33 @@
                     state.isPanning = true;
                 }
 
-                img.onmousemove = function(e) {
-    if (state.isPanning) {
-        e.preventDefault();
-        let newPanX = e.clientX - state.lastX;
-        let newPanY = e.clientY - state.lastY;
+                img.onmousemove = function (e) {
+                    if (state.isPanning) {
+                        e.preventDefault();
+                        let newPanX = e.clientX - state.lastX;
+                        let newPanY = e.clientY - state.lastY;
 
-        // Limit panning to image width and height
-        const imgRect = img.getBoundingClientRect();
-        const containerRect = img.parentElement.getBoundingClientRect();
-        // if (newPanX > 0) newPanX = 0;
-        // if (newPanY > 0) newPanY = 0;
-        // if (newPanX < containerRect.width - imgRect.width * state.scale) newPanX = containerRect.width - imgRect.width * state.scale;
-        // if (newPanY < containerRect.height - imgRect.height * state.scale) newPanY = containerRect.height - imgRect.height * state.scale;
-        // Check for right and bottom boundaries
-        // if (newPanX < containerRect.width - imgRect.width) newPanX = containerRect.width - imgRect.width;
-        // if (newPanY < containerRect.height - imgRect.height) newPanY = containerRect.height - imgRect.height;
+                        // Limit panning to image width and height
+                        const imgRect = img.getBoundingClientRect();
+                        const containerRect = img.parentElement.getBoundingClientRect();
+                        // if (newPanX > 0) newPanX = 0;
+                        // if (newPanY > 0) newPanY = 0;
+                        // if (newPanX < containerRect.width - imgRect.width * state.scale) newPanX = containerRect.width - imgRect.width * state.scale;
+                        // if (newPanY < containerRect.height - imgRect.height * state.scale) newPanY = containerRect.height - imgRect.height * state.scale;
+                        // Check for right and bottom boundaries
+                        // if (newPanX < containerRect.width - imgRect.width) newPanX = containerRect.width - imgRect.width;
+                        // if (newPanY < containerRect.height - imgRect.height) newPanY = containerRect.height - imgRect.height;
 
-        state.panX = newPanX;
-        state.panY = newPanY;
+                        state.panX = newPanX;
+                        state.panY = newPanY;
 
-        requestAnimationFrame(() => {
-            img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
-        });
-    }
-}
+                        requestAnimationFrame(() => {
+                            img.style.transform = `scale(${state.scale}) translate(${state.panX}px, ${state.panY}px)`;
+                        });
+                    }
+                }
 
-                img.onmouseup = function(e) {
+                img.onmouseup = function (e) {
                     img.classList.remove('grabbing');
                     state.isPanning = false;
                 }
@@ -389,6 +413,7 @@
         }
     </script>
 </head>
+
 <body>
     <!-- <button class="drop-both-button">Keep Both 💜 💜 </button> -->
     <div class="img-container">
@@ -400,7 +425,9 @@
         </div>
     </div>
     <!-- <button class="keep-both-button">Drop Both 🗑️🗑️</button> -->
-    <a href="{{ url_for('end_session') }}" class="return-overview-button" style="text-decoration: none; color: inherit;"> ⏸️ Pause session</a>
+    <a href="{{ url_for('end_session') }}" class="return-overview-button"
+        style="text-decoration: none; color: inherit;"> ⏸️ Pause session</a>
 
 </body>
-</html> 
+
+</html>
