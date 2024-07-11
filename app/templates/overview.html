@@ -34,7 +34,7 @@
           <progress value="{{ sweep_session_progress_percentage[session] }}" max="100"></progress>
       </div>
         <!-- Buttons for actions related to the session -->
-        <a href="{{ url_for('sweep_decision', sweep_session_id=session, img_path_left='initial', img_path_right='initial') }}">
+        <a href="{{ url_for('render_decision', sweep_session_id=session, img_path_left='initial', img_path_right='initial') }}">
           <button class="open-session-button">📁 Open session {{ session }}</button>
         </a>
         <a href="{{ url_for('download_subset', sweep_session_id=session) }}">
