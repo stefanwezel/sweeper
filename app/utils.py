@@ -81,4 +81,4 @@ def convert_dng_to_jpg(dng_path: str) -> Tuple[str, str]:
 
 
 def strip_media_folder_from_path(media_folder: str, path: str) -> str:
-    return path.replace(media_folder + "/", "")
+    return path.replace(media_folder, "")

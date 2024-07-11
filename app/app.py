@@ -236,22 +236,22 @@ def update_image_status(
 def redirect_to_decision(
     position: str,
     sweep_session_id: str,
-    other_image_name: str,
-    nearest_neighbor_path: str,
+    img_1: str,
+    img_2: str,
 ) -> str:
     if position == "left":
         redirect_url: str = url_for(
             "render_decision",
             sweep_session_id=sweep_session_id,
-            img_path_left=nearest_neighbor_path,
-            img_path_right=other_image_name,
+            img_path_left=img_2,
+            img_path_right=img_1,
         )
     else:
         redirect_url: str = url_for(
             "render_decision",
             sweep_session_id=sweep_session_id,
-            img_path_left=other_image_name,
-            img_path_right=nearest_neighbor_path,
+            img_path_left=img_1,
+            img_path_right=img_2,
         )
 
     return redirect_url
@@ -615,7 +615,7 @@ def upload_done(sweep_session_id):
 @app.route("/embed_images/<string:sweep_session_id>", methods=["GET", "POST"])
 def embed_images(sweep_session_id):
 
-    image_dir = f"{app.config['MEDIA_FOLDER']}/{sweep_session_id}"
+    image_dir = os.path.join(app.config["MEDIA_FOLDER"], sweep_session_id)
 
     new_sweep_session = add_session_for_user(
         session.get("user")["userinfo"]["name"], sweep_session_id
