@@ -9,11 +9,7 @@ from PIL import Image
 class FileClient:
     """Class to handle file operations such as creating, removing and zipping directories."""
 
-    def __init__(
-        self,
-        media_folder: str,
-        sweep_session_id: str,
-    ) -> None:
+    def __init__(self, media_folder: str, sweep_session_id: str,) -> None:
         self.media_folder = media_folder
         self.sweep_session_id = sweep_session_id
         self.upload_dir = os.path.join(self.media_folder, self.sweep_session_id)

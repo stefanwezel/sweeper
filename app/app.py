@@ -234,10 +234,7 @@ def update_image_status(
 
 
 def redirect_to_decision(
-    position: str,
-    sweep_session_id: str,
-    img_1: str,
-    img_2: str,
+    position: str, sweep_session_id: str, img_1: str, img_2: str,
 ) -> str:
     if position == "left":
         redirect_url: str = url_for(
@@ -319,9 +316,7 @@ oauth.register(
     "auth0",
     client_id=os.getenv("AUTH0_CLIENT_ID"),
     client_secret=os.getenv("AUTH0_CLIENT_SECRET"),
-    client_kwargs={
-        "scope": "openid profile email",
-    },
+    client_kwargs={"scope": "openid profile email",},
     server_metadata_url=f'https://{os.getenv("AUTH0_DOMAIN")}/.well-known/openid-configuration',
 )
 login_manager.init_app(app)
@@ -492,55 +487,39 @@ def continue_from():
 # TODO get rid of img_paths in url
 @login_required
 @app.route(
-    "/sweep/<string:sweep_session_id>/left/<path:img_path_left>/right/<path:img_path_right>"
+    "/sweep/<string:sweep_session_id>/left=<path:img_path_left>/right=<path:img_path_right>"
 )
 def render_decision(sweep_session_id, img_path_left, img_path_right):
     if img_path_left == "initial":
         starting_image = get_starting_image(sweep_session_id)
         if starting_image:
             nearest_neighbor = get_nearest_neighbor(sweep_session_id, starting_image.id)
-            return render_template(
-                "decision.html",
-                sweep_session_id=sweep_session_id,
-                img_path_left=starting_image.display_path,
-                img_path_right=nearest_neighbor.display_path,
-            )
+            img_path_left = starting_image.display_path
+            img_path_right = nearest_neighbor.display_path
+
         else:
-            return render_template(
-                "decision.html",
-                sweep_session_id=sweep_session_id,
-                img_path_left="endofline.jpg",
-                img_path_right="endofline.jpg",
-            )
+            # TODO replace fixed image with something else
+            img_path_left = "endofline.jpg"
+            img_path_right = "endofline.jpg"
 
     elif img_path_left == "endofline":
-        return render_template(
-            "decision.html",
-            sweep_session_id=sweep_session_id,
-            img_path_left="endofline.jpg",
-            img_path_right=sweep_session_id,
-        )
+        img_path_left = "endofline.jpg"
+        img_path_right = sweep_session_id
+
     elif img_path_right == "endofline":
-        return render_template(
-            "decision.html",
-            sweep_session_id=sweep_session_id,
-            img_path_left=sweep_session_id,
-            img_path_right="endofline.jpg",
-        )
+        img_path_left = sweep_session_id
+        img_path_right = "endofline.jpg"
 
     else:
-        return render_template(
-            "decision.html",
-            sweep_session_id=sweep_session_id,
-            img_path_left=img_path_left,
-            img_path_right=img_path_right,
-        )
+        img_path_left = img_path_left
+        img_path_right = img_path_right
 
-
-@app.route("/select_seed_image", methods=["GET"])
-def select_seed_image():
-    logging.info("Button clicked - selecting new seed image...")
-    return redirect(url_for("render_decision"))
+    return render_template(
+        "decision.html",
+        sweep_session_id=sweep_session_id,
+        img_path_left=img_path_left,
+        img_path_right=img_path_right,
+    )
 
 
 @app.route("/end_session", methods=["GET"])
@@ -575,9 +554,9 @@ def overview():
         image_paths = [embedding.display_path for embedding in embeddings]
         sweep_session_images[sweep_session.sweep_session_token] = image_paths
         percentage = get_percentage_reviewed(sweep_session.sweep_session_token)
-        sweep_session_progress_percentage[sweep_session.sweep_session_token] = (
-            percentage
-        )
+        sweep_session_progress_percentage[
+            sweep_session.sweep_session_token
+        ] = percentage
 
     return render_template(
         "overview.html",
@@ -673,8 +652,7 @@ def uploaded_file(filename):
 @app.route("/download/<string:sweep_session_id>", methods=["GET"])
 def download_subset(sweep_session_id):
     file_client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"],
-        sweep_session_id=sweep_session_id,
+        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=sweep_session_id,
     )
     # TODO make this part of the FileClient class
     upload_dir = file_client.upload_dir
@@ -699,8 +677,7 @@ def init_new_sweep_session():
     new_hash = uuid.uuid4().hex
 
     client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"],
-        sweep_session_id=new_hash,
+        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=new_hash,
     )
     client.create_dir()
 
@@ -723,8 +700,7 @@ def drop_sweep_session(sweep_session_id):
         )
 
     client = utils.FileClient(
-        media_folder=app.config["MEDIA_FOLDER"],
-        sweep_session_id=sweep_session_id,
+        media_folder=app.config["MEDIA_FOLDER"], sweep_session_id=sweep_session_id,
     )
     client.remove_directory()
 
