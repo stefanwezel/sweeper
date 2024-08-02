@@ -19,14 +19,21 @@ services:
     volumes:
       - ./app:/app
       - media_folder:/app/media  # Mount the media folder
-
   db:
     image: postgres:14
+    build:
+      context: ./postgres
+      dockerfile: postgres.Dockerfile
     container_name: db
     env_file:
       - .env.dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/vector_extension.sql:/docker-entrypoint-initdb.d/0-vector_extension.sql
+    environment:
+    - POSTGRES_NAME=sweeper
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
   
 volumes:
   postgres_data:
