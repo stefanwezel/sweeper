@@ -43,8 +43,35 @@ ENV_FILE = find_dotenv(".env.dev")  # TODO make this flag dependent
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
+
+# App related functions and routes
+def create_app():
+    # Create the Flask app
+    app = Flask(__name__)
+    app.secret_key = "your_secret_key"  # Set a secret key for session security
+
+    # Set up flask global variables
+    app.config["GATEWAY_HOST"] = "http://127.0.0.1"
+    app.config["GATEWAY_PORT"] = "5000"
+    app.config["EMBEDDINGS_HOST"] = "http://127.0.0.1"
+    app.config["EMBEDDINGS_PORT"] = "5001"
+    app.config["MEDIA_FOLDER"] = os.getenv("MEDIA_FOLDER")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+    app.config["MODE"] = os.getenv("MODE")
+
+    # # Initialize the SQLAlchemy instance with the Flask app
+    # db.init_app(app)
+
+    # with app.app_context():
+    #     db.create_all()
+
+    return app
+
+
+app = create_app()
+
 # Create the SQLAlchemy instance
-db = SQLAlchemy()  # maybe make this upper case (?)
+db = SQLAlchemy(app)  # maybe make this upper case (?)
 
 
 class User(db.Model):
@@ -124,6 +151,7 @@ def add_session_for_user(email: str, sweep_session_token: str) -> SweepSession:
 
 def get_sessions_for_user(email: str) -> List[SweepSession]:
     user = User.query.filter_by(email=email).first()
+    logging.info(f"User: {user}")
     if user:
         sessions = SweepSession.query.filter_by(user_id=user.id).all()
         return sessions
@@ -272,30 +300,7 @@ def get_percentage_reviewed(sweep_session_id: str) -> int:
         return 0
 
 
-# App related functions and routes
-def create_app():
-    # Create the Flask app
-    app = Flask(__name__)
-    app.secret_key = "your_secret_key"  # Set a secret key for session security
 
-    # Set up flask global variables
-    app.config["GATEWAY_HOST"] = "http://127.0.0.1"
-    app.config["GATEWAY_PORT"] = "5000"
-    app.config["EMBEDDINGS_HOST"] = "http://127.0.0.1"
-    app.config["EMBEDDINGS_PORT"] = "5001"
-    app.config["MEDIA_FOLDER"] = os.getenv("MEDIA_FOLDER")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
-
-    # Initialize the SQLAlchemy instance with the Flask app
-    db.init_app(app)
-
-    with app.app_context():
-        db.create_all()
-
-    return app
-
-
-app = create_app()
 
 # User management
 oauth = OAuth(app)
@@ -529,7 +534,7 @@ def end_session():
 
 
 @app.route("/overview")
-@login_required
+# @login_required
 def overview():
     """Renders an overview page listing sessions for a given user."""
     with app.app_context():
@@ -564,6 +569,7 @@ def overview():
         sweep_session_images=sweep_session_images,
         sweep_session_progress_percentage=sweep_session_progress_percentage,
     )
+
 
 
 @app.route("/upload_form/<string:sweep_session_id>")
@@ -707,5 +713,5 @@ def drop_sweep_session(sweep_session_id):
     return redirect(url_for("overview"))
 
 
-if __name__ == "__main__":
-    app.run(port=app.config["GATEWAY_PORT"], debug=True)
+# if __name__ == "__main__":
+#     app.run(port=app.config["GATEWAY_PORT"], debug=True)

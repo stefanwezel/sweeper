@@ -5,36 +5,30 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
+    command: python manage.py run -h 0.0.0.0
     ports:
-      - "5000:5000"
+      - 5000:5000
     env_file:
       - .env.dev
     environment:
       - MODE=development
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-      - SQLALCHEMY_DATABASE_URI=${DATABASE_URI}  # Use the environment variable from .env.dev
+      - MEDIA_FOLDER=/app/media  # Updated path
+    volumes:
+      - ./media:/app/media  # Updated path
     depends_on:
       - db
-    volumes:
-      - ./app:/app
-      - media_folder:/app/media  # Mount the media folder
+
   db:
-    image: postgres:14
-    build:
-      context: ./postgres
-      dockerfile: postgres.Dockerfile
-    container_name: db
-    env_file:
-      - .env.dev
+    image: pgvector/pgvector:pg16
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres/vector_extension.sql:/docker-entrypoint-initdb.d/0-vector_extension.sql
+      - postgres_data:/var/lib/postgresql/data/
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-    - POSTGRES_NAME=sweeper
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgres
-  
+      - POSTGRES_USER=sweepy
+      - POSTGRES_PASSWORD=sweepy
+      - POSTGRES_DB=sweeper
+
 volumes:
   postgres_data:
-  media_folder:
