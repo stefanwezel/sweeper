@@ -17,18 +17,6 @@ services:
       - MEDIA_FOLDER=/app/media  # Updated path
     volumes:
       - ./media:/app/media  # Updated path
-    depends_on:
-      - db
-
-  db:
-    image: pgvector/pgvector:pg16
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    environment:
-      - POSTGRES_USER=sweepy
-      - POSTGRES_PASSWORD=sweepy
-      - POSTGRES_DB=sweeper
 
 volumes:
   postgres_data:
