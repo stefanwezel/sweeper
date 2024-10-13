@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  sweeper-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: python manage.py run -h 0.0.0.0
+    ports:
+      - 5000:5000
+    env_file:
+      - .env.local
+    environment:
+      - MODE=development
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - MEDIA_FOLDER=/app/media  # Updated path
+    volumes:
+      - ./media:/app/media  # Updated path
+    depends_on:
+      - db
+
+  db:
+    image: pgvector/pgvector:pg16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=sweepy
+      - POSTGRES_PASSWORD=sweepy
+      - POSTGRES_DB=sweeper
+
+volumes:
+  postgres_data:
